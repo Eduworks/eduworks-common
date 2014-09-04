@@ -4,7 +4,7 @@
   <resolvers>
     <chain name="eduworks-common-ivyde-workspace-chain-resolver">
 	  <!-- <ibiblio name="aduna" m2compatible="true" root="http://repo.aduna-software.org/maven2/releases/" /> -->
-      <ibiblio name="ibiblio" m2compatible="true"/>
+      <ibiblio name="ibiblio2" m2compatible="true" root="http://mirrors.ibiblio.org/maven2/"/>
       <ibiblio name="aperture-repo" m2compatible="true" usepoms="false" root="http://aperture.sourceforge.net/maven/" />
 	  <ibiblio name="cloudera-repo" m2compatible="true" root="https://repository.cloudera.com/artifactory/cloudera-repos/" />
 	  <ibiblio name="java-repo" m2compatible="true" root="http://download.java.net/maven/2/" />
