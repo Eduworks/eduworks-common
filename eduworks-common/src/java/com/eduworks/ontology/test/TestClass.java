@@ -15,8 +15,6 @@ import org.junit.Test;
 import com.eduworks.ontology.Ontology;
 import com.eduworks.ontology.OntologyClass;
 import com.hp.hpl.jena.query.ReadWrite;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.tdb.TDB;
 
 public class TestClass {
 

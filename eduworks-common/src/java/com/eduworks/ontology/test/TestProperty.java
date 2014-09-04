@@ -18,7 +18,6 @@ import org.junit.Test;
 
 import com.eduworks.ontology.Ontology;
 import com.eduworks.ontology.OntologyProperty;
-
 import com.hp.hpl.jena.query.ReadWrite;
 
 public class TestProperty {
