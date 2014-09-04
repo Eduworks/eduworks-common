@@ -81,7 +81,7 @@
 		<property name="antcontrib.installed" value="true"/>
 	</target>
 
-	<target name="eduworks-common-versions">	
+	<target name="eduworks-common-versions">
 		
 	    <condition property="eduworks.common.version" value="${eduworks.common.version}" else="testing">
 	       	<isset property="eduworks.common.version"/>
