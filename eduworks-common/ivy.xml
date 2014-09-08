@@ -42,7 +42,7 @@
     <dependency org="org.apache.jena" name="jena-iri" rev="1.0.1">
 		<exclude org="org.apache.httpcomponents"/>
     </dependency>
-    <dependency org="org.apache.jena" name="jena-tdb" rev="1.1.0">
+    <dependency org="org.apache.jena" name="jena-tdb" rev="1.0.1">
 		<exclude org="org.apache.httpcomponents"/>
     </dependency>
             	
