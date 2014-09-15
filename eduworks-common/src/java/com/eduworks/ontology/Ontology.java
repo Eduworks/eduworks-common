@@ -32,6 +32,7 @@ import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -40,6 +41,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.shared.ClosedException;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.tdb.TDBLoader;
@@ -121,12 +123,12 @@ public class Ontology extends OntologyWrapper
 	}
 	
 	public static void setTDBLocation(String directory){
-		if(!directory.equals(currentDirectory)){
+		//if(!directory.equals(currentDirectory)){
 			tdbDataSet = TDBFactory.createDataset(directory);
 			tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
 			
 			currentDirectory = directory;
-		}
+		//}
 	}
 	
 	public static void setDefaultURI(String uri){

@@ -15,11 +15,14 @@ import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntProperty;
+import com.hp.hpl.jena.ontology.impl.OntPropertyImpl;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
+
 import com.hp.hpl.jena.vocabulary.OWL;
+import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 public class OntologyInstance extends OntologyWrapper {
@@ -399,6 +402,8 @@ public class OntologyInstance extends OntologyWrapper {
 	public void update(JSONObject values){
 		JSONObject infValues = this.getInferredProperties();
 		
+		values.remove("uri");
+		
 		Iterator<String> k = infValues.keys();
 		while(k.hasNext()){
 			String key = k.next();
@@ -438,11 +443,9 @@ public class OntologyInstance extends OntologyWrapper {
 		JSONObject oldValues = this.getJSONRepresentation(true);
 		JSONObject currentValues = new JSONObject();
 		 
+		oldValues.remove("uri");
 		
 		k = oldValues.keys();
-		
-		
-		
 		while(k.hasNext()){
 			String key = k.next();
 			try {
@@ -514,6 +517,7 @@ public class OntologyInstance extends OntologyWrapper {
 	
 	private void updateProperties(Ontology ont, Individual jenaInd, JSONObject oldProps, JSONObject newProps, JSONObject inferredProps){
 		Iterator<String> k = oldProps.keys();
+		
 		while(k.hasNext()){
 			String key = k.next();
 			
@@ -630,6 +634,13 @@ public class OntologyInstance extends OntologyWrapper {
 				}
 			}
 		}
+		
+		try{
+			instanceObj.put("uri", jenaInstance.getURI());
+		}catch(JSONException e){
+			throw new RuntimeException("Error Adding URI to JSON Representation");
+		}
+		
 		
 		// TODO: Annotations?
 		
