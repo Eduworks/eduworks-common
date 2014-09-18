@@ -123,12 +123,21 @@ public class Ontology extends OntologyWrapper
 	}
 	
 	public static void setTDBLocation(String directory){
-		//if(!directory.equals(currentDirectory)){
+			// TODO: Probably only want to reset the dataset if an exception has occurred.
+			if(tdbDataSet != null)
+				tdbDataSet.close();
+			
 			tdbDataSet = TDBFactory.createDataset(directory);
+			TDB.sync(tdbDataSet);
+			
+			tdbSpec = new OntModelSpec(OntModelSpec.OWL_MEM_MICRO_RULE_INF);
 			tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
 			
 			currentDirectory = directory;
-		//}
+			
+			tdbDataSet.begin(ReadWrite.WRITE);
+			
+			tdbDataSet.commit();
 	}
 	
 	public static void setDefaultURI(String uri){
@@ -170,7 +179,8 @@ public class Ontology extends OntologyWrapper
 		}
 		
 		Model base = tdbDataSet.getNamedModel(identifier);
-
+	
+					
 		OntModel _o = ModelFactory.createOntologyModel(tdbSpec, base);
 		
 		Ontology o = new Ontology(_o, identifier);

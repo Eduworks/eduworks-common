@@ -239,7 +239,7 @@ public class OntologyInstance extends OntologyWrapper {
 						throw new RuntimeException("Missing Required Property: " + propertyId);
 					}
 				}catch(JSONException e){
-					throw new RuntimeException("This shouldn't happen",e);
+					throw new RuntimeException("This shouldn't happen: (on "+ propertyId+")", e);
 				}
 			}
 		}
