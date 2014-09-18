@@ -135,6 +135,7 @@ public class Ontology extends OntologyWrapper
 			
 			currentDirectory = directory;
 			
+			// HACK: Sort of hacky, have to do a write transaction after an exception in order to prevent the 'already closed' exception
 			tdbDataSet.begin(ReadWrite.WRITE);
 			
 			tdbDataSet.commit();
