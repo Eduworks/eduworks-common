@@ -793,7 +793,7 @@ public class Ontology extends OntologyWrapper
 						// INDIVIDUAL IDs AND LITERALS
 						if (val.isResource())
 						{ // ID
-							if(!local || jenaModel.isInBaseModel(val)){
+							if(!local || val.asResource().getURI().startsWith(baseIRI)){
 								result.put(var, getIdentifier(val.asResource().getURI()));
 							}
 						}
