@@ -1,7 +1,7 @@
 eduworks-common
 ===============
 
-eduworks-common is a Java library to assist developers by providing data structures and classes for common tasks that are found in the Eduworks repitoire.
+eduworks-common is a Java library to assist developers by providing data structures and classes for common tasks that are found in the Eduworks repertoire.
 
 It provides:
 
