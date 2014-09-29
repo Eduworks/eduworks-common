@@ -25,4 +25,4 @@ eduworks-common requires the following to build or use:
   
 The bug tracker for eduworks-common is being currently maintained on GitHub, at the following url: https://github.com/Eduworks/eduworks-common/issues
 
-The lead developer for eduworks-common is Fritz (fritz.ray@eduworks.com).
+The lead contact for eduworks-common is Fritz (fritz.ray@eduworks.com).
