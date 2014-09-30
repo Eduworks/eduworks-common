@@ -29,16 +29,16 @@ import com.eduworks.util.Tuple;
 public class EwDistributedThreading
 {
 	static boolean debug = true;
-	static DatagramSocket	socket	= null;
+	static DatagramSocket socket = null;
 	static MulticastSocket mcsocket = null;
-	static Logger					log	;
+	static Logger log;
 	static
 	{
-		log		= Logger.getLogger(EwDistributedThreading.class);
+		log = Logger.getLogger(EwDistributedThreading.class);
 		try
 		{
 			socket = new DatagramSocket(null);
-			socket.bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"),4445));
+			socket.bind(new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), 4445));
 			log.info("Bound " + Inet4Address.getByName("0.0.0.0") + " Datagram Socket to 4445.");
 		}
 		catch (SocketException e1)
@@ -87,7 +87,7 @@ public class EwDistributedThreading
 					try
 					{
 						mcsocket.receive(packet);
-						String received = new String(packet.getData(),Charset.defaultCharset());
+						String received = new String(packet.getData(), Charset.defaultCharset());
 						receiveBroadcast(packet.getAddress(), received);
 					}
 					catch (SocketTimeoutException ex)
@@ -107,15 +107,15 @@ public class EwDistributedThreading
 
 	public static class Peer
 	{
-		long			lastHeartbeat;
-		long			threadsInUse;
-		String			version;
-		String			ip;
-		public String	name;
-		public short	port;
+		long lastHeartbeat;
+		long threadsInUse;
+		String version;
+		String ip;
+		public String name;
+		public short port;
 	}
 
-	static Map<String, Peer>	peers	= new HashMap<String, Peer>();
+	static Map<String, Peer> peers = new HashMap<String, Peer>();
 
 	protected static void receiveBroadcast(InetAddress inetAddress, String received)
 	{
@@ -128,7 +128,7 @@ public class EwDistributedThreading
 
 		String key = ip + receivedName + receivedPort;
 
-//		log.debug("Received broadcast from " + ip + ": " + received);
+		// log.debug("Received broadcast from " + ip + ": " + received);
 		if (!peers.containsKey(key))
 			peers.put(key, new Peer());
 		Peer p = peers.get(key);
@@ -155,28 +155,30 @@ public class EwDistributedThreading
 		socket.send(packet);
 	}
 
-	static long	lastHeartbeat	= 0;
+	static long lastHeartbeat = 0;
+
 	public static void heartbeat()
 	{
 		if (System.currentTimeMillis() - lastHeartbeat < 5000)
 			return;
-//		log.debug("Heartbeating.");
+		// log.debug("Heartbeating.");
 		lastHeartbeat = System.currentTimeMillis();
-		String versionNumber = EwVersion.getVersion();
-		String tasks = Long.toString(EwThreading.getTaskCount());
 		try
 		{
-			if (mrs == null) 
+			String versionNumber = EwVersion.getVersion();
+			String tasks = Long.toString(EwThreading.getTaskCount());
+			if (mrs == null)
 				mrs = new ArrayList<MapReduceServer>();
 			for (MapReduceServer mr : mrs)
 			{
-//				log.debug("Heartbeating. Sending broadcast packet for " + mr.name);
-				sendBroadcast(versionNumber.trim() + "\t" + tasks + "\t" + mr.name + "\t" + mr.port+"\t");
+				// log.debug("Heartbeating. Sending broadcast packet for " +
+				// mr.name);
+				sendBroadcast(versionNumber.trim() + "\t" + tasks + "\t" + mr.name + "\t" + mr.port + "\t");
 			}
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 	}
 

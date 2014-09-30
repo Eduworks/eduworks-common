@@ -26,7 +26,6 @@ public class EwVersion
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
 			return "unknown";
 		}
 	}
