@@ -12,6 +12,7 @@
 	  <ibiblio name="semweb4j-repo" m2compatible="true" root="http://semweb4j.org/repo/" />
 	  <ibiblio name="couchbase-repo" m2compatible="true" root="http://files.couchbase.com/maven2/" />
 	  <ibiblio name="info-bliki-repository" m2compatible="true" root="http://gwtwiki.googlecode.com/svn/maven-snapshot-repository/" />
+	  <ibiblio name="ow2" m2compatible="true" root="http://repository.ow2.org/nexus/content/repositories/ow2-legacy/" />
       <ibiblio name="jsi" m2compatible="true" root="http://sourceforge.net/projects/jsi/files/m2_repo" />
     </chain>
   </resolvers>
