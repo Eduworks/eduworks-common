@@ -42,9 +42,13 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.shared.ClosedException;
+import com.hp.hpl.jena.sparql.JenaTransactionException;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.tdb.TDBLoader;
+import com.hp.hpl.jena.tdb.mgt.TDBMgt;
+import com.hp.hpl.jena.tdb.mgt.TDBSystemInfo;
+import com.hp.hpl.jena.tdb.sys.TDBInternal;
 import com.hp.hpl.jena.util.iterator.Filter;
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.OWL2;
@@ -123,22 +127,17 @@ public class Ontology extends OntologyWrapper
 	}
 	
 	public static void setTDBLocation(String directory){
-			// TODO: Probably only want to reset the dataset if an exception has occurred.
-			if(tdbDataSet != null)
+		if(tdbDataSet == null || !currentDirectory.equals(directory)){
+			if(tdbDataSet != null && !tdbDataSet.isInTransaction())
 				tdbDataSet.close();
 			
 			tdbDataSet = TDBFactory.createDataset(directory);
-			TDB.sync(tdbDataSet);
 			
 			tdbSpec = new OntModelSpec(OntModelSpec.OWL_MEM_MICRO_RULE_INF);
 			tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
 			
 			currentDirectory = directory;
-			
-			// HACK: Sort of hacky, have to do a write transaction after an exception in order to prevent the 'already closed' exception
-			tdbDataSet.begin(ReadWrite.WRITE);
-			
-			tdbDataSet.commit();
+		}
 	}
 	
 	public static void setDefaultURI(String uri){
