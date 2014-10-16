@@ -125,8 +125,12 @@ public class Ontology extends OntologyWrapper
 	public static Dataset getTDBDataset(){
 		return tdbDataSet;
 	}
-	
-	public static void setTDBLocation(String directory){
+
+	static String lockedDirectory = null;
+	public static synchronized void setTDBLocation(String directory){
+		if (directory.equals(lockedDirectory))
+			return;
+		lockedDirectory = directory;
 		if(tdbDataSet == null || !currentDirectory.equals(directory)){
 			if(tdbDataSet != null && !tdbDataSet.isInTransaction())
 				tdbDataSet.close();
