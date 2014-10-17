@@ -1,6 +1,9 @@
 package com.eduworks.ontology;
 
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -122,6 +125,22 @@ public class Ontology extends OntologyWrapper
 		TDBLoader.loadModel(o.jenaModel, inputPath);
 	}
 	
+	public static void exportFromTDB(String outputPath, String identifier,String extension){
+		Ontology o = Ontology.loadOntology(identifier);
+		
+		String fullOutputLocation = outputPath+(outputPath.endsWith(File.separator) ? "" : File.separator)+identifier+extension;
+		
+		try{
+			FileWriter writer = new FileWriter(fullOutputLocation);
+			o.getJenaModel().write(writer);
+			writer.close();
+			o.close(true);
+		}catch(IOException e){
+			o.close(true);
+			throw new RuntimeException("Failed to Export Ontology to Path: "+fullOutputLocation);
+		}
+	}
+	
 	public static Dataset getTDBDataset(){
 		return tdbDataSet;
 	}
@@ -146,6 +165,10 @@ public class Ontology extends OntologyWrapper
 	
 	public static void setDefaultURI(String uri){
 		defaultURI = uri;
+	}
+	
+	public static String getDefaultURI(){
+		return defaultURI;
 	}
 	
 	// TODO: Need to have method to load ontology from IRI (and eventually load

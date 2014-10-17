@@ -320,7 +320,7 @@ public class OntologyInstance extends OntologyWrapper {
 			OntologyClass c = ont.getClass(type.substring(1));
 			
 			// Get the instances of the class type requirement
-			Map<String, OntologyInstance> instances = c.getAllInstances();
+			Map<String, OntologyInstance> instances = c.getAllInstances(false);
 			
 			// Make sure the ID points to an existing instance
 			if(!instances.containsKey(value)){
@@ -533,14 +533,15 @@ public class OntologyInstance extends OntologyWrapper {
 						JSONArray vals = inferredProps.getJSONArray(key);
 						
 						OntProperty invProp = changedProp.getJenaProperty().getInverse();
-						
-						String invPropKey = getIdentifier(invProp.getURI());
-						
-						for(int i = 0; i < vals.length(); i++){
-							OntologyInstance related = ont.getInstance(vals.getString(i));
+						if(invProp != null){
+							String invPropKey = getIdentifier(invProp.getURI());
 							
-							if(related.getJSONRepresentation(true).has(invPropKey)){
-								related.getJenaIndividual().removeProperty(invProp, jenaInd);
+							for(int i = 0; i < vals.length(); i++){
+								OntologyInstance related = ont.getInstance(vals.getString(i));
+								
+								if(related.getJSONRepresentation(true).has(invPropKey)){
+									related.getJenaIndividual().removeProperty(invProp, jenaInd);
+								}
 							}
 						}
 						inferredProps.remove(key);

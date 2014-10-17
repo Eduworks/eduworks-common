@@ -395,6 +395,10 @@ public class OntologyClass extends OntologyWrapper {
 	 * @return a Map of String (InstanceId) to the OntologyInstance it identifies
 	 */
 	public Map<String, OntologyInstance> getAllInstances(){
+		return getAllInstances(true);
+	}
+	
+	public Map<String, OntologyInstance> getAllInstances(boolean local){
 		Map<String, OntologyInstance> instances = new HashMap<String, OntologyInstance>();
 		
 		String classId = getIdentifierString(jenaClass.getURI());
@@ -403,7 +407,7 @@ public class OntologyClass extends OntologyWrapper {
 
 		// TODO: Make sure this finds inferred instances
 		for(OntResource ind : jenaClass.listInstances().toSet()){
-			if(ind.isIndividual()){
+			if(ind.isIndividual() && (!local || ind.getURI().startsWith(ont.getBaseIRI()))){
 				OntologyInstance instance = new OntologyInstance(ind.asIndividual(), ont);
 				instances.put(instance.getId(), instance);
 			}
