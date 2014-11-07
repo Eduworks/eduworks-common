@@ -14,13 +14,15 @@ import com.eduworks.lang.json.impl.EwJsonArray;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.OntClass;
+import com.hp.hpl.jena.ontology.OntModel;
+import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.ontology.OntProperty;
 import com.hp.hpl.jena.ontology.impl.OntPropertyImpl;
 import com.hp.hpl.jena.rdf.model.Literal;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
-
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -533,6 +535,11 @@ public class OntologyInstance extends OntologyWrapper {
 						JSONArray vals = inferredProps.getJSONArray(key);
 						
 						OntProperty invProp = changedProp.getJenaProperty().getInverse();
+						
+						if(changedProp.getJenaProperty().getURI().equals(OWL.sameAs.getURI())){
+							invProp = ont.getJenaModel().getOntProperty(OWL.sameAs.getURI());
+						}
+						
 						if(invProp != null){
 							String invPropKey = getIdentifier(invProp.getURI());
 							
@@ -608,8 +615,13 @@ public class OntologyInstance extends OntologyWrapper {
 		// TODO: Change to Reasoner!
 		// Get Object Properties and Values associated with and add to instance Object
 		
+		OntModel explicitModel = null;
+		if(local){
+			explicitModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ont.getJenaModel().getBaseModel());
+		}
+		
 		for(Statement stmt : jenaInstance.listProperties().toSet()){
-			if(!local || ont.getJenaModel().isInBaseModel(stmt)){
+			if(!local || explicitModel.contains(stmt)){
 				
 			
 				Property p = stmt.getPredicate();
@@ -652,11 +664,12 @@ public class OntologyInstance extends OntologyWrapper {
 	public JSONObject getInferredProperties() {
 		JSONObject instanceObj = new JSONObject();
 
+		OntModel explicitModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ont.getJenaModel().getBaseModel());
 		// TODO: Change to Reasoner!
 		// Get Object Properties and Values associated with and add to instance Object
 		
 		for(Statement stmt : jenaInstance.listProperties().toSet()){
-			if(!ont.getJenaModel().isInBaseModel(stmt)){
+			if(!explicitModel.contains(stmt)){
 				Property p = stmt.getPredicate();
 				
 				if(p.getURI() != null && !p.equals(OWL.differentFrom)){

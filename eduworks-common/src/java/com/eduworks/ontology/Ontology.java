@@ -66,6 +66,8 @@ public class Ontology extends OntologyWrapper
 
 	private static String defaultURI = "http://www.eduworks.com/";
 
+	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MINI_RULE_INF;
+	
 	// JENA Manager Things
 	private static OntDocumentManager jenaManager = OntDocumentManager.getInstance();
 	private static HashMap<String, Ontology> cache = new HashMap<String, Ontology>();
@@ -78,7 +80,7 @@ public class Ontology extends OntologyWrapper
 	public static Object lock = new Object();
 	static
 	{
-		tdbSpec = new OntModelSpec(OntModelSpec.OWL_MEM_MICRO_RULE_INF);
+		tdbSpec = new OntModelSpec(reasonerSpec);
 		
 		synchronized (Ontology.class)
 		{
@@ -145,21 +147,31 @@ public class Ontology extends OntologyWrapper
 		return tdbDataSet;
 	}
 
-	static String lockedDirectory = null;
 	public static synchronized void setTDBLocation(String directory){
-		if (directory.equals(lockedDirectory))
-			return;
-		lockedDirectory = directory;
-		if(tdbDataSet == null || !currentDirectory.equals(directory)){
-			if(tdbDataSet != null && !tdbDataSet.isInTransaction())
+		setTDBLocation(directory, false);
+	}
+	
+	public static synchronized void setTDBLocation(String directory, boolean hard){
+		if(tdbDataSet == null || !currentDirectory.equals(directory) || hard){
+			if(tdbDataSet != null){
 				tdbDataSet.close();
+				tdbDataSet = null;
+			}
+				
 			
 			tdbDataSet = TDBFactory.createDataset(directory);
 			
-			tdbSpec = new OntModelSpec(OntModelSpec.OWL_MEM_MICRO_RULE_INF);
+			tdbSpec = new OntModelSpec(reasonerSpec);
 			tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
 			
 			currentDirectory = directory;
+			
+			// STILL HACKY, BUT PREVENTS THE ALREADY CLOSED EXCEPTION IF WE ARE RESETTING THE TDB LOCATION
+			if(hard){
+				tdbDataSet.begin(ReadWrite.WRITE);
+	 			
+	 			tdbDataSet.commit();
+			}
 		}
 	}
 	
@@ -207,8 +219,8 @@ public class Ontology extends OntologyWrapper
 		
 		Model base = tdbDataSet.getNamedModel(identifier);
 	
-					
 		OntModel _o = ModelFactory.createOntologyModel(tdbSpec, base);
+		
 		
 		Ontology o = new Ontology(_o, identifier);
 
@@ -613,12 +625,19 @@ public class Ontology extends OntologyWrapper
 
 		Set<String> testedIris = new HashSet<String>();
 
+		Set<String> namespaceSet = new HashSet<String>();
 		// Check if Class Exists by appending all uri's with identifier and
 		// checking statement existence
 		String iri = null;
 		for (com.hp.hpl.jena.ontology.Ontology o : jenaModel.listOntologies().toSet())
 		{
-			String tempUri = o.getURI() + "#" + propertyId;
+			namespaceSet.add(o.getURI()+"#");
+		}
+		
+		namespaceSet.add(OWL.NS);
+		
+		for(String ns : namespaceSet){
+			String tempUri = ns + propertyId;
 
 			if (jenaModel.contains(ResourceFactory.createResource(tempUri), RDF.type, OWL.DatatypeProperty)
 					|| jenaModel.contains(ResourceFactory.createResource(tempUri), RDF.type, OWL.ObjectProperty))
@@ -631,7 +650,7 @@ public class Ontology extends OntologyWrapper
 				testedIris.add(tempUri);
 			}
 		}
-
+		
 		if (iri == null)
 		{
 			throw new RuntimeException("Could not find IRI for Property Id (" + propertyId + ") testedIris: " + testedIris);
