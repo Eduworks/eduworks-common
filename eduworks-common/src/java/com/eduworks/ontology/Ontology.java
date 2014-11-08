@@ -66,7 +66,7 @@ public class Ontology extends OntologyWrapper
 
 	private static String defaultURI = "http://www.eduworks.com/";
 
-	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MINI_RULE_INF;
+	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MICRO_RULE_INF;
 	
 	// JENA Manager Things
 	private static OntDocumentManager jenaManager = OntDocumentManager.getInstance();
