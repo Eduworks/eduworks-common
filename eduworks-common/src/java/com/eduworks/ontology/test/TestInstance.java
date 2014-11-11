@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import com.eduworks.ontology.Ontology;
 import com.eduworks.ontology.OntologyInstance;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 
 public class TestInstance {
@@ -21,7 +22,7 @@ public class TestInstance {
 	
 	public static String idChar = Ontology.idCharacter;
 	
-	public static final String localDirectory = "/Users/djunker/Documents/ontologies/";
+	public static final String localDirectory = "/Users/djunker/Java/etc/test-java-competencies/tdb";
 	
 	static String testOntologyName = "test-instance";
 	
@@ -40,23 +41,23 @@ public class TestInstance {
 	static String existingInstanceId;
 	static String deleteInstanceId;
 	
+	public static Dataset ds;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 	
-		Ontology.setTDBLocation(localDirectory);
+		ds = Ontology.setTDBLocation(localDirectory);
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
 			Ontology ont;
 			
 			try{
-				ont = Ontology.createOntology(testOntologyName);
+				ont = Ontology.createOntology(ds, testOntologyName);
 			}catch(RuntimeException e){
-				ont = Ontology.loadOntology(testOntologyName);
-				ont.delete();
-				ont = Ontology.createOntology(testOntologyName);
+				ont = Ontology.loadOntology(ds, testOntologyName);
+				ont = Ontology.createOntology(ds, testOntologyName);
 			}
 		
 			JSONObject values = new JSONObject();
@@ -69,17 +70,17 @@ public class TestInstance {
 			existingInstanceId = ont.createInstance(simpleClassId, values).getId();
 			deleteInstanceId = ont.createInstance(simpleClassId, values).getId();
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			assertTrue(ont.propertyExists(dataPropId));
 			assertTrue(ont.propertyExists(objectPropId));
@@ -88,7 +89,7 @@ public class TestInstance {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 
@@ -113,10 +114,10 @@ public class TestInstance {
 	public void test_CreateSimple() {
 		String classId = simpleClassId;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 			
@@ -126,11 +127,11 @@ public class TestInstance {
 			
 			assertTrue(rep.toString(), rep.length() == values.length());
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -139,10 +140,10 @@ public class TestInstance {
 		String classId = simpleClassId;
 		
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 			
@@ -159,16 +160,16 @@ public class TestInstance {
 			assertTrue("Instance does not have expected data property and value: "+rep, rep.has(idChar+dataPropId) 
 																					&& rep.optJSONArray(idChar+dataPropId).length() == 1 
 																					&& rep.optJSONArray(idChar+dataPropId).optString(0).equals(propValue[0]));
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage()); 
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -176,10 +177,10 @@ public class TestInstance {
 	public void test_CreateSimpleWithObjectProp(){
 		String classId = simpleClassId;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			JSONObject values = new JSONObject();
 			
 			String[] propValue = new String[1];
@@ -194,16 +195,16 @@ public class TestInstance {
 			assertTrue("Instance does not have expected data property and value: "+rep, rep.has(idChar+objectPropId) 
 																					&& rep.optJSONArray(idChar+objectPropId).length() == 1 
 																					&& rep.optJSONArray(idChar+objectPropId).optString(0).equals(propValue[0]));
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage()); 
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -211,10 +212,10 @@ public class TestInstance {
 	
 	@Test
 	public void test_ReadAllInstances(){
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			Map<String, OntologyInstance> instanceMap = ont.getClass(simpleClassId).getAllInstances();
 			
@@ -222,17 +223,17 @@ public class TestInstance {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void testRead(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			OntologyInstance instance = ont.getInstance(existingInstanceId);
 			
@@ -242,7 +243,7 @@ public class TestInstance {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -251,10 +252,10 @@ public class TestInstance {
 	@Test
 	public void testUpdate(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 			
@@ -275,16 +276,16 @@ public class TestInstance {
 			assertTrue(rep.length() == 1);
 			assertTrue(rep.toString().equals(values.toString()));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage()); 
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -292,26 +293,26 @@ public class TestInstance {
 	
 	@Test
 	public void testDelete(){
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyInstance instance = ont.getInstance(deleteInstanceId);
 			
 			instance.delete();
 			
 			assertTrue("", instance.getJSONRepresentation().length() == 0);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			ont.getInstance(deleteInstanceId);
 			
 			fail("Should throw RuntimeException when getting deleted Instance");
@@ -321,7 +322,7 @@ public class TestInstance {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	

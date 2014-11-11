@@ -16,11 +16,12 @@ import org.junit.Test;
 import com.eduworks.ontology.Ontology;
 import com.eduworks.ontology.OntologyClass;
 import com.eduworks.ontology.OntologyInstance;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 
 public class TestOntology extends OntologyTestHarness { 
 	
-	public static final String localDirectory = "/Users/djunker/Documents/competencies/tdb";
+	public static final String localDirectory = "/Users/djunker/Java/etc/test-java-competencies/tdb";
 	
 	public static String identifier;
 	
@@ -30,14 +31,16 @@ public class TestOntology extends OntologyTestHarness {
 	public static String loadedOntId = "simple-load";
 	public static String deletedOntId = "simple-delete";
 	
-	public static String structureOntId = "http://www.eduworks.com/competencies/structure-competency";
+	public static String structureOntId = "http://www.competency.services/structure-competency";
 	public static String structuredOntId = "test-structured";
 	public static String secondStructuredOntId = "test-structured-II";
+	
+	public static Dataset ds;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		
-		Ontology.setTDBLocation(localDirectory);
+		ds = Ontology.setTDBLocation(localDirectory);
 		
 		HashSet<String> toDelete = new HashSet<String>();
 		
@@ -49,48 +52,47 @@ public class TestOntology extends OntologyTestHarness {
 		
 		for (String ontId : toDelete)
 		{
-			Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+			ds.begin(ReadWrite.WRITE);
 			try
 			{
-				Ontology ont = Ontology.loadOntology(ontId);
-				ont.delete();
+				Ontology ont = Ontology.loadOntology(ds, ontId);
 				
-				Ontology.getTDBDataset().commit();
+				ds.commit();
 			}
 			catch (RuntimeException e)
 			{
-				Ontology.getTDBDataset().abort();
+				ds.abort();
 			}
 			finally{
-				Ontology.getTDBDataset().end();
+				ds.end();
 			}
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			for (String s : Ontology.listModelIdentifiers())
+			for (String s : Ontology.listModelIdentifiers(ds))
 			{
 				System.out.println(s);
 			}
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try{
-			Ontology.createOntology(loadedOntId);
-			Ontology.createOntology(deletedOntId);
-			Ontology.createOntology(structuredOntId);
-			Ontology.createOntology(secondStructuredOntId);
+			Ontology.createOntology(ds, loadedOntId);
+			Ontology.createOntology(ds, deletedOntId);
+			Ontology.createOntology(ds, structuredOntId);
+			Ontology.createOntology(ds, secondStructuredOntId);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -110,20 +112,20 @@ public class TestOntology extends OntologyTestHarness {
 	public void test_CreateWithEmptyString() {
 		identifier = "";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.createOntology(identifier);
-			Ontology.getTDBDataset().commit();
+			Ontology ont = Ontology.createOntology(ds, identifier);
+			ds.commit();
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -131,20 +133,20 @@ public class TestOntology extends OntologyTestHarness {
 	public void test_CreateWithNullString(){
 		identifier = null;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.createOntology(identifier);
-			Ontology.getTDBDataset().commit();
+			Ontology ont = Ontology.createOntology(ds, identifier);
+			ds.commit();
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 
@@ -154,20 +156,20 @@ public class TestOntology extends OntologyTestHarness {
 	public void test_LoadWithEmptyString(){
 		identifier = "";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(identifier);
-			Ontology.getTDBDataset().commit();
+			Ontology ont = Ontology.loadOntology(ds,identifier);
+			ds.commit();
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -175,20 +177,20 @@ public class TestOntology extends OntologyTestHarness {
 	public void test_LoadWithNullString(){
 		identifier = null;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(identifier);
-			Ontology.getTDBDataset().commit();
+			Ontology ont = Ontology.loadOntology(ds, identifier);
+			ds.commit();
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -196,30 +198,30 @@ public class TestOntology extends OntologyTestHarness {
 	public void test_LoadNonExistent(){
 		identifier = "doesnt-exist";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(identifier);
-			Ontology.getTDBDataset().commit();
+			Ontology ont = Ontology.loadOntology(ds, identifier);
+			ds.commit();
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test (expected = RuntimeException.class)
 	public void test_createInstanceWithoutClass(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(structuredOntId);
+			Ontology ont = Ontology.loadOntology(ds, structuredOntId);
 	
 			JSONObject values = new JSONObject();
 			
@@ -228,21 +230,21 @@ public class TestOntology extends OntologyTestHarness {
 			
 			ont.createInstance(idChar+"Competency", values);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw new RuntimeException("Couldn't put values in Value Object");
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -256,38 +258,38 @@ public class TestOntology extends OntologyTestHarness {
 	@Test
 	public void test_CreateSimple(){
 
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.createOntology(createdOntId);
-			Ontology.getTDBDataset().commit();
+			Ontology ont = Ontology.createOntology(ds, createdOntId);
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
-		assertTrue(Ontology.getTDBDataset().containsNamedModel(createdOntId));
-		Ontology.getTDBDataset().end();
+		ds.begin(ReadWrite.READ);
+		assertTrue(ds.containsNamedModel(createdOntId));
+		ds.end();
 	}
 	
 	// LOAD
 	
 	@Test
 	public void test_LoadSimple(){
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(loadedOntId);
+			Ontology ont = Ontology.loadOntology(ds,loadedOntId);
 			
 			assertNotNull(ont);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -295,44 +297,43 @@ public class TestOntology extends OntologyTestHarness {
 	
 	@Test
 	public void test_DeleteSimple(){
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(deletedOntId);
-			ont.delete();
+			Ontology ont = Ontology.loadOntology(ds, deletedOntId);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
-		assertFalse(Ontology.getTDBDataset().containsNamedModel(deletedOntId));
-		Ontology.getTDBDataset().end();
+		ds.begin(ReadWrite.READ);
+		assertFalse(ds.containsNamedModel(deletedOntId));
+		ds.end();
 	}
 	
 	@Test
 	public void test_LoadExternalStructure(){	
 
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(structuredOntId);
+			Ontology ont = Ontology.loadOntology(ds, structuredOntId);
 			
-			ont.addOntology(structureOntId);
-			Ontology.getTDBDataset().commit();
+			ont.addOntology(ds, structureOntId);
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(structuredOntId);
+			Ontology ont = Ontology.loadOntology(ds, structuredOntId);
 			
 			JSONObject values = new JSONObject();
 			
@@ -344,10 +345,10 @@ public class TestOntology extends OntologyTestHarness {
 		
 			String id = in.getId();
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 			
-			Ontology.getTDBDataset().begin(ReadWrite.READ);
-			ont = Ontology.loadOntology(structuredOntId);
+			ds.begin(ReadWrite.READ);
+			ont = Ontology.loadOntology(ds, structuredOntId);
 			
 			in = ont.getInstance(id);
 			JSONObject newRep = in.getJSONRepresentation();
@@ -357,29 +358,29 @@ public class TestOntology extends OntologyTestHarness {
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw new RuntimeException("Couldn't put values in Value Object");
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_LoadExternalSeparately(){
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ext1 = Ontology.loadOntology(structuredOntId);
+			Ontology ext1 = Ontology.loadOntology(ds, structuredOntId);
 			
-			ext1.addOntology(structureOntId);
+			ext1.addOntology(ds, structureOntId);
 			
-			Ontology ext2 = Ontology.loadOntology(secondStructuredOntId);
+			Ontology ext2 = Ontology.loadOntology(ds, secondStructuredOntId);
 			
-			ext2.addOntology(structureOntId);
+			ext2.addOntology(ds, structureOntId);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 			
 			OntologyClass cls1 = ext1.getClass(idChar+"Competency");
 			
@@ -389,15 +390,15 @@ public class TestOntology extends OntologyTestHarness {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	//@Test
 	public void test_QueryWithExternalStructure(){
-		Ontology ont = Ontology.loadOntology(secondStructuredOntId);
+		Ontology ont = Ontology.loadOntology(ds, secondStructuredOntId);
 		
-		ont.addOntology(structureOntId);
+		ont.addOntology(ds, structureOntId);
 		
 		JSONObject values = new JSONObject();
 		

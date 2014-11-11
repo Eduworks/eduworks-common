@@ -18,11 +18,12 @@ import org.junit.Test;
 
 import com.eduworks.ontology.Ontology;
 import com.eduworks.ontology.OntologyProperty;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 
 public class TestProperty {
 
-	public static final String localDirectory = "/Users/djunker/Documents/competencies/tdb";
+	public static final String localDirectory = "/Users/djunker/Java/etc/test-java-competencies/tdb";
 	
 	public static String idChar = Ontology.idCharacter;
 	
@@ -52,22 +53,23 @@ public class TestProperty {
 	public static int baseObjectDomainLength = 2;
 	public static int baseObjectRangeLength = 2;
 	
+	public static Dataset ds;
+	
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		
-		Ontology.setTDBLocation(localDirectory);
+		ds = Ontology.setTDBLocation(localDirectory);
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
 			Ontology ont;
 		
 			try{
-				ont = Ontology.createOntology(testOntologyName);
+				ont = Ontology.createOntology(ds, testOntologyName);
 			}catch(RuntimeException e){
-				ont = Ontology.loadOntology(testOntologyName);
-				ont.delete();
-				ont = Ontology.createOntology(testOntologyName);
+				ont = Ontology.loadOntology(ds, testOntologyName);
+				ont = Ontology.createOntology(ds, testOntologyName);
 			}
 			
 			// Create Classes for Domains and Object Properties
@@ -103,17 +105,17 @@ public class TestProperty {
 			assertTrue(dataSubProp.getJSONRepresentation().optJSONArray("superproperties").toString().contains(existingDataPropertyId));
 			assertTrue(objectSubProp.getJSONRepresentation().optJSONArray("superproperties").toString().contains(existingObjectPropertyId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			assertTrue(ont.getDataPropertyIdList().contains(idChar+existingDataPropertyId));
 			assertTrue(ont.getDataPropertyIdList().contains(idChar+existingDataSubPropertyId));
@@ -123,7 +125,7 @@ public class TestProperty {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -131,10 +133,10 @@ public class TestProperty {
 	@AfterClass
 	public static void tearDownAfterClass() {
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			System.out.println("Updated Data Property Values: ");
 			System.out.println(ont.getProperty(updateDataPropertyId).getJSONRepresentation());
@@ -145,7 +147,7 @@ public class TestProperty {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 		// Removed this so I could inspect the ontology after the test, may want to leave commented out 
@@ -168,10 +170,10 @@ public class TestProperty {
 	public void test_CreateSimpleDataProperty(){
 		String propId = "data_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			OntologyProperty prop = ont.createDataProperty(propId, new JSONObject());
 			
@@ -181,11 +183,11 @@ public class TestProperty {
 			
 			helper_testSimpleDataProperty(prop);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -206,10 +208,10 @@ public class TestProperty {
 	public void test_CreateDomainedDataProperty(){
 		String propId = "domained_data_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			JSONObject values = new JSONObject();
 		
 			values.put("domain", domainClassId);
@@ -218,16 +220,16 @@ public class TestProperty {
 			
 			assertTrue("Data Property has Domain_Class in Domain", prop.getDomain().toString().contains(domainClassId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -235,10 +237,10 @@ public class TestProperty {
 	public void test_CreateIntersectDomainedDataProperty(){
 		String propId = "intersected_domained_data_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			JSONObject values = new JSONObject();
 		
 			values.append("domain", domainClassId);
@@ -250,16 +252,16 @@ public class TestProperty {
 			assertTrue("Data Property has Domain_Class in Domain", prop.getDomain().toString().contains(domainClassId));
 			assertTrue("Data Property has Intersecting_Domain_Class in Domain", prop.getDomain().toString().contains(intersectingDomainClassId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -267,10 +269,10 @@ public class TestProperty {
 	public void test_CreateFunctionalDataProperty(){
 		String propertyId = "functional_data_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			JSONObject values = new JSONObject();
 		
 			values.put("functional", "true");
@@ -279,16 +281,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Functional", prop.getJSONRepresentation().getBoolean("functional"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 		
@@ -297,10 +299,10 @@ public class TestProperty {
 		String propertyId = "string_Prop";
 		String propertyRange = "xsd:string";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -316,16 +318,16 @@ public class TestProperty {
 			assertTrue("Check Range Length", range.length() == 1);
 			assertEquals("Check Range is String", range.get(0), propertyRange);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -335,10 +337,10 @@ public class TestProperty {
 		String childId = "child_data_prop";
 		
 
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty parent = ont.createDataProperty(parentId, new JSONObject());
 			
 			JSONObject childVals = new JSONObject();
@@ -352,16 +354,16 @@ public class TestProperty {
 			assertTrue("Check Parent only has One SubProperty", parent.getSubProperties().size() == 1);
 			assertTrue("Check Child is Subproperty of Parent", helper_checkSubProps(parent.getSubProperties(), child));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -382,10 +384,10 @@ public class TestProperty {
 		String childId = "domained_data_prop_child";
 		
 
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -413,16 +415,16 @@ public class TestProperty {
 			}
 			assertTrue("Check Child Domain", childSet.equals(parentSet));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -431,10 +433,10 @@ public class TestProperty {
 		String parentId = "ranged_data_prop_parent";
 		String childId = "ranged_data_prop_child";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			JSONObject vals = new JSONObject();
 		
 		
@@ -453,16 +455,16 @@ public class TestProperty {
 		
 			assertTrue("Check Range of Child", child.getRange().get(0).equals(parent.getRange().get(0)));
 
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -475,10 +477,10 @@ public class TestProperty {
 		String parentId = "functional_data_prop_parent";
 		String childId = "functional_data_prop_child";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -495,16 +497,16 @@ public class TestProperty {
 		
 			assertTrue("Child Property is not Functional "+child.getJSONRepresentation(), !child.getJSONRepresentation().getBoolean("functional"));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -515,10 +517,10 @@ public class TestProperty {
 	public void test_CreateSimpleObjectProperty(){
 		String propId = "obj_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			OntologyProperty prop = ont.createObjectProperty(propId, new JSONObject());
 		
@@ -528,11 +530,11 @@ public class TestProperty {
 			
 			helper_testSimpleObjectProperty(prop);
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -564,10 +566,10 @@ public class TestProperty {
 	public void test_CreateDomainedObjectProperty(){
 		String propId = "domained_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			JSONObject values = new JSONObject();
 		
@@ -578,16 +580,16 @@ public class TestProperty {
 		
 			assertTrue("Object Property has Domain_Class in Domain", prop.getDomain().toString().contains(domainClassId));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -595,10 +597,10 @@ public class TestProperty {
 	public void test_CreateIntersectedDomainObjectProperty(){
 		String propId = "interesected_domained_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -611,16 +613,16 @@ public class TestProperty {
 			assertTrue("Object Property has Domain_Class in Domain", prop.getDomain().toString().contains(domainClassId));
 			assertTrue("Object Property has Intersecting_Domain_Class in Domain", prop.getDomain().toString().contains(intersectingDomainClassId));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 		// TODO: Test with Instances of Class
@@ -630,10 +632,10 @@ public class TestProperty {
 	public void test_CreateRangedObjectProperty(){
 		String propId = "ranged_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -643,16 +645,16 @@ public class TestProperty {
 		
 			assertTrue("Object Property has Domain_Class in Domain", prop.getDomain().toString().contains(rangeClassId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -660,10 +662,10 @@ public class TestProperty {
 	public void test_CreateFunctionalObjectProperty(){
 		String propertyId = "functional_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			JSONObject values = new JSONObject();
 		
 			values.put("functional", "true");
@@ -672,16 +674,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Functional", prop.getJSONRepresentation().getBoolean("functional"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -690,10 +692,10 @@ public class TestProperty {
 	public void test_CreateInverseFunctionalObjectProperty(){
 		String propertyId = "inverse_functional_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -704,16 +706,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Functional", prop.getJSONRepresentation().getBoolean("inverse-functional"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -721,10 +723,10 @@ public class TestProperty {
 	public void test_CreateSymmetricObjectProperty(){
 		String propertyId = "symmetric_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -734,16 +736,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Symmetric", prop.getJSONRepresentation().getBoolean("symmetric"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 		// TODO: Test with Instances
@@ -753,10 +755,10 @@ public class TestProperty {
 	public void test_CreateAsymmetricObjectProperty(){
 		String propertyId = "asymmetric_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -767,16 +769,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Asymmetric", prop.getJSONRepresentation().getBoolean("asymmetric"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -785,10 +787,10 @@ public class TestProperty {
 	public void test_CreateReflexiveObjectProperty(){
 		String propertyId = "reflexive_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -798,16 +800,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Reflexive", prop.getJSONRepresentation().getBoolean("reflexive"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -816,10 +818,10 @@ public class TestProperty {
 	public void test_CreateIrreflexiveObjectProperty(){
 		String propertyId = "irreflexive_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -829,16 +831,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Irreflexive", prop.getJSONRepresentation().getBoolean("irreflexive"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -846,10 +848,10 @@ public class TestProperty {
 	public void test_CreateTransitiveObjectProperty(){
 		String propertyId = "transitive_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);	
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);	
 		
 			JSONObject values = new JSONObject();
 		
@@ -859,16 +861,16 @@ public class TestProperty {
 		
 			assertTrue("Property is Transitive", prop.getJSONRepresentation().getBoolean("transitive"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 		// TODO: Test With Instances
@@ -878,10 +880,10 @@ public class TestProperty {
 	public void test_CreateInverseObjectProperties(){
 		String propertyId = "new_inverse_object_prop";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 		
 			JSONObject values = new JSONObject();
 		
@@ -898,16 +900,16 @@ public class TestProperty {
 			assertTrue("Existing Property has Inverse"+otherProp.getJSONRepresentation(), otherProp.getJSONRepresentation().optString("inverse").contains(propertyId));
 			
 
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 		// TODO: Test With Instances
@@ -918,26 +920,26 @@ public class TestProperty {
 	@Test
 	public void test_PropertyExists(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			assertTrue(ont.propertyExists(existingDataPropertyId));
 			assertTrue(!ont.propertyExists(nonexistentPropertyId));
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_ReadProperty(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(existingDataPropertyId);
 		
 			helper_testSimpleDataProperty(prop);
@@ -948,7 +950,7 @@ public class TestProperty {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}	
 			
 	}
@@ -956,10 +958,10 @@ public class TestProperty {
 	@Test
 	public void test_ReadAllProperties(){
 			
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			Map<String, OntologyProperty> propertyHierarchy = ont.getAllProperties();
 	
 			assertTrue("Property Hierarchy Top Level Contains Existing_Data_Property", propertyHierarchy.containsKey(idChar+existingDataPropertyId));
@@ -979,17 +981,17 @@ public class TestProperty {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_ReadAllDataPropertyIds(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			Set<String> dataPropIds = ont.getDataPropertyIdList();
 			
 			assertTrue("Data Properties Contains Existing Data Property", dataPropIds.contains(idChar+existingDataPropertyId));
@@ -997,17 +999,17 @@ public class TestProperty {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_ReadAllObjectPropertyIds(){
 
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			Set<String> objectPropIds = ont.getObjectPropertyIdList();
 			
 			assertTrue("Data Properties Contains Existing Object Property", objectPropIds.contains(idChar+existingObjectPropertyId));
@@ -1016,7 +1018,7 @@ public class TestProperty {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -1072,10 +1074,10 @@ public class TestProperty {
 
 	public void generic_UpdateNothing(String propertyId){
 
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(propertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1087,20 +1089,20 @@ public class TestProperty {
 			
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	public void generic_UpdatePropertyDomain(String propertyId){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(propertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1161,25 +1163,25 @@ public class TestProperty {
 			
 			helper_compareAfterRemove(newVals, newRep);
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 
 	public void generic_UpdateFunctional(String propertyId){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(propertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1209,25 +1211,25 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 
 	public void generic_UpdateSuperProperty(String propertyId){
 			
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(propertyId);
 			
 			String parentPropId;
@@ -1273,16 +1275,16 @@ public class TestProperty {
 			
 			helper_compareAfterRemove(newVals, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -1294,10 +1296,10 @@ public class TestProperty {
 	@Test
 	public void test_UpdateDataPropertyDomain(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateDataPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1358,25 +1360,25 @@ public class TestProperty {
 			
 			helper_compareAfterRemove(newVals, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}	
 	}
 	
 	@Test
 	public void test_UpdateDataPropertyRange(){
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateDataPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1420,16 +1422,16 @@ public class TestProperty {
 			
 			helper_compareAfterRemove(newVals, newRep);
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -1476,10 +1478,10 @@ public class TestProperty {
 	@Test
 	public void test_UpdateObjectPropertyInverseFunctional(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateObjectPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1510,26 +1512,26 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}	
 	}
 	
 	@Test
 	public void test_UpdateObjectPropertySymmetric(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateObjectPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1558,26 +1560,26 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_UpdateObjectPropertyAsymmetric(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateObjectPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1608,26 +1610,26 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_UpdateObjectPropertyReflexive(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateObjectPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1657,26 +1659,26 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_UpdateObjectPropertyIrreflexive(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateObjectPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1706,26 +1708,26 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
 	@Test
 	public void test_UpdateObjectPropertyTransitive(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(updateObjectPropertyId);
 			
 			JSONObject oldRep = prop.getJSONRepresentation();
@@ -1756,16 +1758,16 @@ public class TestProperty {
 			newRep = prop.getJSONRepresentation();
 			helper_compareAfterUpdate(newVals, oldRep, newRep);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			fail(e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -1774,21 +1776,21 @@ public class TestProperty {
 	@Test
 	public void test_DeleteProperty(){
 
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			OntologyProperty prop = ont.getProperty(deletePropertyId);
 			
 			prop.delete();
 			
 			assertTrue("Property Doesn't Exist", !ont.propertyExists(deletePropertyId));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 

@@ -14,13 +14,14 @@ import org.junit.Test;
 
 import com.eduworks.ontology.Ontology;
 import com.eduworks.ontology.OntologyClass;
+import com.hp.hpl.jena.query.Dataset;
 import com.hp.hpl.jena.query.ReadWrite;
 
 public class TestClass {
 
 	public static String idChar = Ontology.idCharacter;
 	
-	public static final String localDirectory = "/Users/djunker/Documents/competencies/tdb";
+	public static final String localDirectory = "/Users/djunker/Java/etc/test-java-competencies/tdb";
 	
 	public static String testOntologyName = "test-class";
 	
@@ -49,26 +50,27 @@ public class TestClass {
 	public static String domainRangeDataPropId = "domain_range_data_property";
 	public static String domainRangeObjectPropId = "domain_range_object_property";
 	
+	public static Dataset ds;
+	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		
-		Ontology.setTDBLocation(localDirectory);
+		ds = Ontology.setTDBLocation(localDirectory);
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
 			Ontology ont;
 			try
 			{
-				ont = Ontology.createOntology(testOntologyName);
+				ont = Ontology.createOntology(ds, testOntologyName);
 				
 			}
 			catch (RuntimeException e)
 			{
-				ont = Ontology.loadOntology(testOntologyName);
-				ont.delete();
+				ont = Ontology.loadOntology(ds, testOntologyName);
 				
-				ont = Ontology.createOntology(testOntologyName);
+				ont = Ontology.createOntology(ds, testOntologyName);
 			}
 			
 			JSONObject values = new JSONObject();
@@ -112,17 +114,17 @@ public class TestClass {
 			values.remove("domain");
 			ont.createObjectProperty(noDomainObjectPropId, values);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally
 		{
 			
 		}
 			
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			Set<String> classIds = ont.getClassIdList();
 			Set<String> dataPropIds = ont.getDataPropertyIdList();
@@ -148,18 +150,18 @@ public class TestClass {
 			assertTrue(objPropIds.contains(idChar+noDomainObjectPropId));
 			assertTrue(objPropIds.contains(idChar+domainRangeObjectPropId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		
 		}
 		catch(RuntimeException e){
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
-		//Ontology.getTDBDataset().close();
+		//ds.close();
 	}
 
 	@AfterClass
@@ -174,10 +176,10 @@ public class TestClass {
 	@Test (expected = RuntimeException.class)
 	public void test_CreateDuplicate(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			String classId = existingClassId;
 			
@@ -198,16 +200,16 @@ public class TestClass {
 			
 			System.out.println(actualRestrictions);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch (RuntimeException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			throw e;
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -221,10 +223,10 @@ public class TestClass {
 	@Test
 	public void test_CreateSimple() {
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			String classId = "simple_class";
 			
@@ -236,10 +238,10 @@ public class TestClass {
 			
 			helper_testSimpleClass(cls);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		finally{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}
@@ -262,10 +264,10 @@ public class TestClass {
 	public void test_CreateWithObjectPropertyRestriction(){
 		String classId = "object_property_restriction_class";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			
 			JSONObject values = new JSONObject();
@@ -284,15 +286,15 @@ public class TestClass {
 			assertTrue("", actualRestrictions.has(idChar+noDomainNoRangeObjectPropId));
 			assertTrue("", actualRestrictions.optJSONArray(idChar+noDomainNoRangeObjectPropId).optString(0).equals(idChar+rangeClassId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 	}
 	
@@ -300,10 +302,10 @@ public class TestClass {
 	public void test_CreateWithDataPropertyRestriction(){
 		String classId = "data_property_restriction_class";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			
 			JSONObject values = new JSONObject();
@@ -322,15 +324,15 @@ public class TestClass {
 			assertTrue("", actualRestrictions.has(idChar+noDomainNoRangeDataPropId));
 			assertTrue("", actualRestrictions.optJSONArray(idChar+noDomainNoRangeDataPropId).optString(0).equals("xsd:integer"));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -338,10 +340,10 @@ public class TestClass {
 	public void test_CreateWithObjectPropertyRequirement(){
 		String classId = "object_property_requirement_class";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			JSONObject values = new JSONObject();
 			JSONObject requirements = new JSONObject();
@@ -360,15 +362,15 @@ public class TestClass {
 			assertTrue("", actualRequirements.has(idChar+noDomainNoRangeObjectPropId));
 			assertTrue("", actualRequirements.optJSONArray(idChar+noDomainNoRangeObjectPropId).optString(0).equals(idChar+rangeClassId));
 
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -376,10 +378,10 @@ public class TestClass {
 	public void test_CreateWithDataPropertyRequirement(){
 		String classId = "data_property_requirement_class";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			JSONObject values = new JSONObject();
 			JSONObject requirements = new JSONObject();
@@ -397,15 +399,15 @@ public class TestClass {
 			assertTrue("", actualRequirements.has(idChar+noDomainNoRangeDataPropId));
 			assertTrue("", actualRequirements.optJSONArray(idChar+noDomainNoRangeDataPropId).optString(0).equals("xsd:integer"));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -413,10 +415,10 @@ public class TestClass {
 	public void test_CreateSubclass(){
 		String classId = "child_class";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			JSONObject values = new JSONObject();
 			
@@ -437,15 +439,15 @@ public class TestClass {
 			
 			assertTrue("", hasSuper);
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -453,10 +455,10 @@ public class TestClass {
 	public void test_CreateDisjointSiblingclass(){
 		String classId = "disjoint_child_class";
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			JSONObject values = new JSONObject();
 			
@@ -473,15 +475,15 @@ public class TestClass {
 			assertTrue(disjointClasses.length() == 1);
 			assertTrue(disjointClasses.optString(0).equals(idChar+siblingClassId));
 		
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}
 		catch(JSONException e)
 		{
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -491,10 +493,10 @@ public class TestClass {
 	public void test_ReadSimple(){
 		String classId = existingClassId;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			OntologyClass cls = ont.getClass(classId);
 			
@@ -502,7 +504,7 @@ public class TestClass {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -510,10 +512,10 @@ public class TestClass {
 	public void test_ReadSuperclass(){
 		String classId = parentClassId;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			OntologyClass cls = ont.getClass(classId);
 			
@@ -528,7 +530,7 @@ public class TestClass {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -536,10 +538,10 @@ public class TestClass {
 	public void test_ReadSubclass(){
 		String classId = siblingClassId;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			OntologyClass cls = ont.getClass(classId);
 			
@@ -556,7 +558,7 @@ public class TestClass {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -565,11 +567,11 @@ public class TestClass {
 	public void test_UpdateRequirement(){
 		String classId = updatedClassId;
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
 		
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			OntologyClass cls = ont.getClass(classId);
 			
@@ -616,13 +618,13 @@ public class TestClass {
 		}
 		catch(JSONException e)
 		{ 
-			Ontology.getTDBDataset().abort();
+			ds.abort();
 			
 			fail("error with JSON Object: "+e.getMessage());
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 	}
 	
@@ -641,27 +643,27 @@ public class TestClass {
 	@Test
 	public void test_DeleteClass(){
 		
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			
 			OntologyClass cls = ont.getClass(deletedClassId);
 			cls.delete();
 			
 			assertTrue("Property Doesn't Exist", !ont.classExists(deletedClassId));
 			
-			Ontology.getTDBDataset().commit();
+			ds.commit();
 		}	
 		finally
 		{
-			Ontology.getTDBDataset().end();	
+			ds.end();	
 		}
 		
-		Ontology.getTDBDataset().begin(ReadWrite.READ);
+		ds.begin(ReadWrite.READ);
 		try
 		{
-			Ontology ont = Ontology.loadOntology(testOntologyName);
+			Ontology ont = Ontology.loadOntology(ds, testOntologyName);
 			ont.getClass(deletedClassId);
 			fail("Getting Deleted Class should throw Exception");
 		}
@@ -671,7 +673,7 @@ public class TestClass {
 		}
 		finally
 		{
-			Ontology.getTDBDataset().end();
+			ds.end();
 		}
 		
 	}

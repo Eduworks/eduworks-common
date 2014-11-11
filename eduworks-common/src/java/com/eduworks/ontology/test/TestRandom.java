@@ -5,6 +5,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.eduworks.ontology.Ontology;
@@ -22,13 +23,22 @@ import com.hp.hpl.jena.tdb.TDBFactory;
 
 public class TestRandom {
 
+	public static final String localDirectory = "/Users/djunker/Java/etc/test-java-competencies/tdb";
+	
+	public static Dataset ds;
+	
+	@BeforeClass
+	public static void setUpBeforeClass(){
+		ds = Ontology.setTDBLocation(localDirectory);
+	}
 	
 	//@Test
 	public void test_Query(){
 		String dir = "/Users/djunker/Documents/competencies/";
 		String ontName = "example-competencies";
 		
-		Ontology o = Ontology.loadOntology(ontName);
+		
+		Ontology o = Ontology.loadOntology(ds, ontName);
 		
 		System.out.println(o.getClassIdList());
 		
@@ -110,10 +120,10 @@ public class TestRandom {
 		String dir = "/Users/djunker/Documents/competencies/";
 		String firstOnt = "competency-structure";
 		
-		Ontology ont = Ontology.loadOntology(firstOnt);
+		Ontology ont = Ontology.loadOntology(ds, firstOnt);
 		
 		String secondOnt = "navy-competencies";
-		ont.addOntology(secondOnt);
+		ont.addOntology(ds, secondOnt);
 		
 		OntologyClass cls = ont.getClass("Competency");
 		
@@ -132,16 +142,16 @@ public class TestRandom {
 		String dir = "/Users/djunker/Documents/competencies/tdb";	
 		
 		Ontology.setTDBLocation(dir);
-		Ontology.getTDBDataset().begin(ReadWrite.WRITE);
+		ds.begin(ReadWrite.WRITE);
 		
-		for(String s : Ontology.listModelIdentifiers()){
+		for(String s : Ontology.listModelIdentifiers(ds)){
 			System.out.println(s);
 		}
 		
 		System.out.println();
 		
-		Ontology.getTDBDataset().commit();
-		Ontology.getTDBDataset().end();
+		ds.commit();
+		ds.end();
 		
 		Dataset dataset = TDBFactory.createDataset(dir);
 		
@@ -208,9 +218,9 @@ public class TestRandom {
 		Ontology.setTDBLocation(tdbDir);
 		Ontology.setDefaultURI(uri);
 		
-		Ontology.importToTDB(inputPath, identifier);
+		Ontology.importToTDB(ds,inputPath, identifier);
 		
-		List<String> ids = Ontology.listModelIdentifiers();
+		List<String> ids = Ontology.listModelIdentifiers(ds);
 		
 		for(String id : ids){
 			System.out.println(id);
@@ -221,9 +231,9 @@ public class TestRandom {
 		inputPath = "/Users/djunker/Documents/competencies/structure-user.owl";
 		identifier = "structure-user";
 		
-		Ontology.importToTDB(inputPath, identifier);
+		Ontology.importToTDB(ds, inputPath, identifier);
 		
-		ids = Ontology.listModelIdentifiers();
+		ids = Ontology.listModelIdentifiers(ds);
 		
 		for(String id : ids){
 			System.out.println(id);
@@ -238,7 +248,7 @@ public class TestRandom {
 		Ontology.setTDBLocation(tdbDir);
 		Ontology.setDefaultURI(uri);
 		
-		List<String> ids = Ontology.listModelIdentifiers();
+		List<String> ids = Ontology.listModelIdentifiers(ds);
 		
 		for(String id : ids){
 			System.out.println(id);
