@@ -23,6 +23,7 @@ public class EwCache<K, V>
 		if (cache != null)
 			if ((cacheActual = cache.get()) != null)
 				return cacheActual;
+		System.out.println("Creating cache: " + name);
 		caches.put(name, new SoftReference<EwCache<Object, Object>>(cacheActual = new EwCache<Object, Object>(count)));
 		return cacheActual;
 	}

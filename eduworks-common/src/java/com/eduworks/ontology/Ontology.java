@@ -1,6 +1,5 @@
 package com.eduworks.ontology;
 
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.eduworks.lang.EwList;
+import com.eduworks.lang.util.EwCache;
 import com.hp.hpl.jena.ontology.DatatypeProperty;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.ObjectProperty;
@@ -44,14 +44,9 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
-import com.hp.hpl.jena.shared.ClosedException;
-import com.hp.hpl.jena.sparql.JenaTransactionException;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.tdb.TDBLoader;
-import com.hp.hpl.jena.tdb.mgt.TDBMgt;
-import com.hp.hpl.jena.tdb.mgt.TDBSystemInfo;
-import com.hp.hpl.jena.tdb.sys.TDBInternal;
 import com.hp.hpl.jena.util.iterator.Filter;
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.OWL2;
@@ -66,22 +61,19 @@ public class Ontology extends OntologyWrapper
 
 	private static String defaultURI = "http://www.eduworks.com/";
 
-	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MICRO_RULE_INF;
-	
+	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MINI_RULE_INF;
+
 	// JENA Manager Things
 	private static OntDocumentManager jenaManager = OntDocumentManager.getInstance();
 	private static HashMap<String, Ontology> cache = new HashMap<String, Ontology>();
-	
-	private static Dataset tdbDataSet = null;
+
 	private static OntModelSpec tdbSpec;
-	
-	private static String currentDirectory;
 
 	public static Object lock = new Object();
 	static
 	{
 		tdbSpec = new OntModelSpec(reasonerSpec);
-		
+
 		synchronized (Ontology.class)
 		{
 			if (lock instanceof Object)
@@ -99,12 +91,12 @@ public class Ontology extends OntologyWrapper
 		cache = new HashMap<String, Ontology>();
 	}
 
-	public static List<String> listModelIdentifiers()
+	public static List<String> listModelIdentifiers(Dataset tdbDataSet)
 	{
 		List<String> nameList = new EwList<String>();
-		
+
 		Iterator<String> names = tdbDataSet.listNames();
-		
+
 		if (names != null)
 		{
 			while (names.hasNext())
@@ -116,85 +108,84 @@ public class Ontology extends OntologyWrapper
 				}
 			}
 		}
-		
+
 		return nameList;
 	}
-	
-	public static void importToTDB(String inputPath, String identifier){
-		
-		Ontology o = Ontology.createOntology(identifier);
-		
+
+	public static void importToTDB(Dataset tdbDataSet,String inputPath, String identifier)
+	{
+		Ontology o = Ontology.createOntology(tdbDataSet,identifier);
+
 		TDBLoader.loadModel(o.jenaModel, inputPath);
 	}
-	
-	public static void exportFromTDB(String outputPath, String identifier,String extension){
-		Ontology o = Ontology.loadOntology(identifier);
-		
-		String fullOutputLocation = outputPath+(outputPath.endsWith(File.separator) ? "" : File.separator)+identifier+extension;
-		
-		try{
+
+	public static void exportFromTDB(Dataset tdbDataSet,String outputPath, String identifier, String extension)
+	{
+		Ontology o = Ontology.loadOntology(tdbDataSet,identifier);
+
+		String fullOutputLocation = outputPath + (outputPath.endsWith(File.separator) ? "" : File.separator) + identifier + extension;
+
+		try
+		{
 			FileWriter writer = new FileWriter(fullOutputLocation);
 			o.getJenaModel().write(writer);
 			writer.close();
 			o.close(true);
-		}catch(IOException e){
+		}
+		catch (IOException e)
+		{
 			o.close(true);
-			throw new RuntimeException("Failed to Export Ontology to Path: "+fullOutputLocation);
+			throw new RuntimeException("Failed to Export Ontology to Path: " + fullOutputLocation);
 		}
 	}
-	
-	public static Dataset getTDBDataset(){
+
+	public static synchronized Dataset setTDBLocation(String directory)
+	{
+		return setTDBLocation(directory, false);
+	}
+
+	public static synchronized Dataset setTDBLocation(String directory, boolean hard)
+	{
+		Dataset tdbDataSet = null;
+
+		tdbDataSet = TDBFactory.createDataset(directory);
+
+		tdbSpec = new OntModelSpec(reasonerSpec);
+		tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
+
+		// STILL HACKY, BUT PREVENTS THE ALREADY CLOSED EXCEPTION IF WE ARE
+		// RESETTING THE TDB LOCATION
+//		if (hard)
+		{
+			tdbDataSet.begin(ReadWrite.WRITE);
+			tdbDataSet.commit();
+		}
 		return tdbDataSet;
 	}
 
-	public static synchronized void setTDBLocation(String directory){
-		setTDBLocation(directory, false);
-	}
-	
-	public static synchronized void setTDBLocation(String directory, boolean hard){
-		if(tdbDataSet == null || !currentDirectory.equals(directory) || hard){
-			if(tdbDataSet != null){
-				tdbDataSet.close();
-				tdbDataSet = null;
-			}
-				
-			
-			tdbDataSet = TDBFactory.createDataset(directory);
-			
-			tdbSpec = new OntModelSpec(reasonerSpec);
-			tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
-			
-			currentDirectory = directory;
-			
-			// STILL HACKY, BUT PREVENTS THE ALREADY CLOSED EXCEPTION IF WE ARE RESETTING THE TDB LOCATION
-			if(hard){
-				tdbDataSet.begin(ReadWrite.WRITE);
-	 			
-	 			tdbDataSet.commit();
-			}
-		}
-	}
-	
-	public static void setDefaultURI(String uri){
+	public static void setDefaultURI(String uri)
+	{
 		defaultURI = uri;
 	}
-	
-	public static String getDefaultURI(){
+
+	public static String getDefaultURI()
+	{
 		return defaultURI;
 	}
-	
+
 	// TODO: Need to have method to load ontology from IRI (and eventually load
 	// from an online owl-ontology to disk to be used)
 	/**
 	 * Loads an existing ontology from the local directory and wraps it in an
 	 * Ontology object to be manipulated
+	 * 
 	 * @param identifier
 	 *            - Identifier of the ontology (right now this is the filename
 	 *            without the directory or extension)
 	 * 
 	 * @return Ontology Object wrapping the OWLOntology that was loaded
 	 */
-	public static Ontology loadOntology(String identifier)
+	public static Ontology loadOntology(Dataset tdbDataSet,String identifier)
 	{
 		if (identifier == null)
 		{
@@ -204,25 +195,38 @@ public class Ontology extends OntologyWrapper
 		{
 			throw new RuntimeException("Ontology Identifier cannot be empty");
 		}
-		
-		
-		if(defaultURI.endsWith("/")){
+
+		if (defaultURI.endsWith("/"))
+		{
 			identifier = defaultURI + identifier;
-		}else{
+		}
+		else
+		{
 			identifier = defaultURI + "/" + identifier;
 		}
-		
-		if(!tdbDataSet.containsNamedModel(identifier))
+
+		Ontology o = null;
+
+//		o = (Ontology) EwCache.getCache("OntologyCache", 20).get(identifier);
+//		if (o != null && o.jenaModel != null && o.jenaModel.isClosed())
+//			o = null;
+//		if (o != null)
+//		{
+//			return o;
+//		}
+
+		if (!tdbDataSet.containsNamedModel(identifier))
 		{
-			throw new RuntimeException("Model Doesn't Exist with Identifier: "+identifier);
+			throw new RuntimeException("Model Doesn't Exist with Identifier: " + identifier);
 		}
-		
+
 		Model base = tdbDataSet.getNamedModel(identifier);
-	
+
 		OntModel _o = ModelFactory.createOntologyModel(tdbSpec, base);
-		
-		
-		Ontology o = new Ontology(_o, identifier);
+
+		o = new Ontology(_o, identifier);
+
+//		EwCache.getCache("OntologyCache", 20).put(identifier, o);
 
 		return o;
 	}
@@ -230,59 +234,64 @@ public class Ontology extends OntologyWrapper
 	/**
 	 * Creates a new ontology file in the local directory and then loads and
 	 * wraps it in an Ontology object
+	 * 
 	 * @param identifier
 	 *            - The identifier of the new ontology (right now, just the name
 	 *            of the file without the path or extension)
 	 * 
 	 * @return Ontology Object wrapping the newly created JenaOntology
 	 */
-	public static Ontology createOntology(String identifier)
-	{	
+	public static Ontology createOntology(Dataset tdbDataSet,String identifier)
+	{
 		if (identifier.isEmpty())
 		{
 			throw new RuntimeException("Ontology Identifier cannot be empty");
 		}
-		
-		if(defaultURI.endsWith("/")){
+
+		if (defaultURI.endsWith("/"))
+		{
 			identifier = defaultURI + identifier;
-		}else{
+		}
+		else
+		{
 			identifier = defaultURI + "/" + identifier;
 		}
-		
-		if(tdbDataSet.containsNamedModel(identifier))
+
+		if (tdbDataSet.containsNamedModel(identifier))
 		{
 			throw new RuntimeException("Ontology already exists with that identifier");
 		}
-	
+
 		OntModel o = ModelFactory.createOntologyModel(tdbSpec);
-		
+
 		tdbDataSet.addNamedModel(identifier, o);
-		
+
 		o = ModelFactory.createOntologyModel(tdbSpec, tdbDataSet.getNamedModel(identifier));
 		com.hp.hpl.jena.ontology.Ontology ont = o.createOntology(identifier);
-		
+
 		return new Ontology(o, identifier);
 	}
 
 	/* Ontology Instance Properties */
-	
+
 	private OntModel jenaModel;
 
 	private String baseIRI;
 	private String identifier;
-	
+
 	private String tdbDir;
 
 	/* Instance Methods */
 
 	/**
-	 * Constructor for creating/loading a new ontology, wraps the ontology given and saves the 
+	 * Constructor for creating/loading a new ontology, wraps the ontology given
+	 * and saves the
 	 * 
 	 * @param o
 	 *            - OntModel to be wrapped
 	 */
 	private Ontology(OntModel o, String identifier)
-	{	
+	{
 		this.jenaModel = o;
 		this.identifier = identifier;
 		this.baseIRI = identifier;
@@ -292,20 +301,20 @@ public class Ontology extends OntologyWrapper
 	 * Saves the underlying ontology after modifications to the ontology that
 	 * need to be propogated for queries
 	 */
-	public void save()
+	public void save(Dataset tdbDataSet)
 	{
 		// TODO: Check Coherency/Consistency with a Reasoner
 		TDB.sync(tdbDataSet);
 	}
 
-	public void delete()
+	public void delete(Dataset tdbDataSet)
 	{
 		tdbDataSet.removeNamedModel(identifier);
 	}
 
-	public void addOntology(String identifier)
+	public void addOntology(Dataset tdbDataSet,String identifier)
 	{
-		
+
 		if (identifier == null)
 		{
 			throw new NullPointerException();
@@ -315,8 +324,8 @@ public class Ontology extends OntologyWrapper
 			throw new RuntimeException("Ontology Identifier cannot be empty");
 		}
 
-		Ontology ont = loadOntology(identifier);
-		
+		Ontology ont = loadOntology(tdbDataSet,identifier);
+
 		if (!jenaModel.hasLoadedImport(ont.getBaseIRI()))
 		{
 			jenaModel.addSubModel(ont.getJenaModel());
@@ -325,18 +334,20 @@ public class Ontology extends OntologyWrapper
 
 	}
 
-	public Set<String> listImportedOntologies(){
+	public Set<String> listImportedOntologies()
+	{
 		Set<String> ids = new HashSet<String>();
-		
+
 		Set<String> uris = jenaModel.listImportedOntologyURIs();
-		
-		for(String uri : uris){
+
+		for (String uri : uris)
+		{
 			ids.add(getIdentifier(uri));
 		}
-		
+
 		return ids;
 	}
-	
+
 	/* Class */
 
 	/**
@@ -353,10 +364,10 @@ public class Ontology extends OntologyWrapper
 		{
 			throw new RuntimeException("Class (" + id + ") Already Exists");
 		}
-		
+
 		OntologyClass cls = OntologyClass.createClass(this, id, values);
-		
-		return cls; 
+
+		return cls;
 	}
 
 	/**
@@ -367,7 +378,7 @@ public class Ontology extends OntologyWrapper
 	 * @return OntologyClass wrapper for the class specified
 	 */
 	public OntologyClass getClass(String classId)
-	{	
+	{
 		if (classId.startsWith(idCharacter))
 		{
 			classId = classId.substring(1);
@@ -376,7 +387,7 @@ public class Ontology extends OntologyWrapper
 		Set<String> testedIris = new HashSet<String>();
 
 		OntClass jenaClass = null;
-		
+
 		// Check if Class Exists by appending all uri's with identifier and
 		// checking statement existence
 		String uri = null;
@@ -422,7 +433,7 @@ public class Ontology extends OntologyWrapper
 		Map<String, OntologyClass> classes = new HashMap<String, OntologyClass>();
 
 		OntologyClass thing = new OntologyClass(this, jenaModel.getOntClass(OWL2.Thing.getURI()));
-		
+
 		classes.put(thing.getId(), thing);
 
 		return classes;
@@ -456,9 +467,9 @@ public class Ontology extends OntologyWrapper
 	 * @throws JSONException
 	 */
 	public OntologyInstance createInstance(String classId, JSONObject values)
-	{	
+	{
 		OntologyClass cls = getClass(classId);
-	
+
 		// Add Import if the class is from a different ontology
 		if (!cls.getFullId().contains(baseIRI))
 		{
@@ -466,7 +477,7 @@ public class Ontology extends OntologyWrapper
 		}
 
 		OntologyInstance ins = OntologyInstance.createInstance(cls, values);
-		
+
 		return ins;
 	}
 
@@ -477,10 +488,11 @@ public class Ontology extends OntologyWrapper
 	 *            - Id of the instance to be retrieved
 	 * @return OntologyInstance wrapper for the instance specified
 	 */
-	public OntologyInstance getInstance(String instanceId){
+	public OntologyInstance getInstance(String instanceId)
+	{
 		return getInstance(instanceId, false);
 	}
-	
+
 	public OntologyInstance getInstance(String instanceId, boolean local)
 	{
 		String iri = null;
@@ -529,9 +541,10 @@ public class Ontology extends OntologyWrapper
 		}
 
 		Individual jInstance = jenaModel.getIndividual(iri);
-		
-		if(local && !jenaModel.isInBaseModel(jInstance)){
-			throw new RuntimeException("Instance (id: "+instanceId+") is not defined in this model ("+this.identifier+")");
+
+		if (local && !jenaModel.isInBaseModel(jInstance))
+		{
+			throw new RuntimeException("Instance (id: " + instanceId + ") is not defined in this model (" + this.identifier + ")");
 		}
 
 		if (jInstance == null)
@@ -631,12 +644,13 @@ public class Ontology extends OntologyWrapper
 		String iri = null;
 		for (com.hp.hpl.jena.ontology.Ontology o : jenaModel.listOntologies().toSet())
 		{
-			namespaceSet.add(o.getURI()+"#");
+			namespaceSet.add(o.getURI() + "#");
 		}
-		
+
 		namespaceSet.add(OWL.NS);
-		
-		for(String ns : namespaceSet){
+
+		for (String ns : namespaceSet)
+		{
 			String tempUri = ns + propertyId;
 
 			if (jenaModel.contains(ResourceFactory.createResource(tempUri), RDF.type, OWL.DatatypeProperty)
@@ -650,7 +664,7 @@ public class Ontology extends OntologyWrapper
 				testedIris.add(tempUri);
 			}
 		}
-		
+
 		if (iri == null)
 		{
 			throw new RuntimeException("Could not find IRI for Property Id (" + propertyId + ") testedIris: " + testedIris);
@@ -683,25 +697,36 @@ public class Ontology extends OntologyWrapper
 		return ret;
 	}
 
-	public void close(boolean soft)
+	@Override
+	protected void finalize() throws Throwable
 	{
-		if (soft)
-			try
-			{
-				jenaModel.reset();
-			}
-			catch (NullPointerException ex)
-			{
-				System.out.println("Catching NPE from reset()");
-				ex.printStackTrace();
-				cache.remove(identifier);
-				jenaModel.close();
-			}
-		else
+		if (jenaModel != null)
 		{
-			cache.remove(identifier);
+			System.out.println("Saving Model.");
 			jenaModel.close();
 		}
+		super.finalize();
+	}
+
+	public void close(boolean soft)
+	{
+		// if (soft)
+		// try
+		// {
+		// jenaModel.reset();
+		// }
+		// catch (NullPointerException ex)
+		// {
+		// System.out.println("Catching NPE from reset()");
+		// ex.printStackTrace();
+		// cache.remove(identifier);
+		// jenaModel.close();
+		// }
+		// else
+		// {
+		// cache.remove(identifier);
+		// jenaModel.close();
+		// }
 	}
 
 	public Set<String> getDataPropertyIdList()
@@ -797,13 +822,13 @@ public class Ontology extends OntologyWrapper
 
 	public JSONObject query(String sparqlQueryString, boolean local)
 	{
-		
+
 		JSONObject ret = new JSONObject();
 
 		Query q = QueryFactory.create(sparqlQueryString);
-		
+
 		QueryExecution qExec = QueryExecutionFactory.create(q, jenaModel);
-		
+
 		try
 		{
 			if (q.isAskType())
@@ -838,7 +863,8 @@ public class Ontology extends OntologyWrapper
 						// INDIVIDUAL IDs AND LITERALS
 						if (val.isResource())
 						{ // ID
-							if(!local || val.asResource().getURI().startsWith(baseIRI)){
+							if (!local || val.asResource().getURI().startsWith(baseIRI))
+							{
 								result.put(var, getIdentifier(val.asResource().getURI()));
 							}
 						}

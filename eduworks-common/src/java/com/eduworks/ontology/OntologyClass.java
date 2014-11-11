@@ -95,9 +95,6 @@ public class OntologyClass extends OntologyWrapper {
 		}
 		
 		
-		// Save then return new class
-		ont.save();
-		
 		return new OntologyClass(ont, jenaClass);
 	}
 	
@@ -376,8 +373,6 @@ public class OntologyClass extends OntologyWrapper {
 			throw new RuntimeException("Error getting values from newvalue object:"+newVals);
 		}
 		
-		ont.save();
-		
 		return this.getJSONRepresentation();
 	}
 	
@@ -387,7 +382,6 @@ public class OntologyClass extends OntologyWrapper {
 	public void delete(){
 		jenaClass.remove();
 		
-		ont.save();
 	}
 
 	/**

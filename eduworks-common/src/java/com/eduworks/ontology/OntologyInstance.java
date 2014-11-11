@@ -96,9 +96,6 @@ public class OntologyInstance extends OntologyWrapper {
 		jenaInd.addOntClass(cls.getJenaClass());
 		jenaInd.addRDFType(RDFS.Resource);
 		
-		// Add All Axioms to Ontology and Save then return new instance	
-		ont.save();
-		
 		return new OntologyInstance(jenaInd, ont);
 	}
 	
@@ -514,7 +511,6 @@ public class OntologyInstance extends OntologyWrapper {
 		updateProperties(ont,  jenaInstance, oldValues, unrestrictedVals, infValues);
 		
 		
-		ont.save();
 	}
 	
 	private void updateProperties(Ontology ont, Individual jenaInd, JSONObject oldProps, JSONObject newProps, JSONObject inferredProps){
@@ -596,7 +592,6 @@ public class OntologyInstance extends OntologyWrapper {
 		jenaInstance.removeProperties();
 		jenaInstance.remove();
 		
-		ont.save();
 	}
 
 	/**

@@ -80,8 +80,6 @@ public class OntologyProperty extends OntologyWrapper {
 		}
 		
 		
-		ont.save();
-		
 		return new OntologyProperty(ont, newJenaProp);
 	}
 	
@@ -180,8 +178,6 @@ public class OntologyProperty extends OntologyWrapper {
 			throw new RuntimeException("Shouldn't happen, we check that the key exists");
 		}
 		
-		ont.save();
-				
 		return new OntologyProperty(ont, newJenaProp);
 	}
 	
@@ -559,7 +555,6 @@ public class OntologyProperty extends OntologyWrapper {
 			throw new RuntimeException("Error Reading New Values: "+e.getMessage());
 		}
 		
-		ont.save();
 	}
 	
 	/**
@@ -567,8 +562,6 @@ public class OntologyProperty extends OntologyWrapper {
 	 */
 	public void delete(){
 		jenaProp.remove();
-		
-		ont.save();
 	}
 	
 	
