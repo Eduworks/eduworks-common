@@ -65,31 +65,9 @@ public class Ontology extends OntologyWrapper
 
 	// JENA Manager Things
 	private static OntDocumentManager jenaManager = OntDocumentManager.getInstance();
-	private static HashMap<String, Ontology> cache = new HashMap<String, Ontology>();
 
-	private static OntModelSpec tdbSpec;
 
 	public static Object lock = new Object();
-	static
-	{
-		tdbSpec = new OntModelSpec(reasonerSpec);
-
-		synchronized (Ontology.class)
-		{
-			if (lock instanceof Object)
-				;
-			else
-				lock = new Object();
-		}
-	}
-
-	/**
-	 * Delete's the cache and creates a new one to reset it
-	 */
-	public static void clearCache()
-	{
-		cache = new HashMap<String, Ontology>();
-	}
 
 	public static List<String> listModelIdentifiers(Dataset tdbDataSet)
 	{
@@ -150,16 +128,14 @@ public class Ontology extends OntologyWrapper
 
 		tdbDataSet = TDBFactory.createDataset(directory);
 
-		tdbSpec = new OntModelSpec(reasonerSpec);
-		tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
-
 		// STILL HACKY, BUT PREVENTS THE ALREADY CLOSED EXCEPTION IF WE ARE
 		// RESETTING THE TDB LOCATION
 //		if (hard)
-		{
-			tdbDataSet.begin(ReadWrite.WRITE);
-			tdbDataSet.commit();
-		}
+//		{
+//			tdbDataSet.begin(ReadWrite.WRITE);
+//			tdbDataSet.commit();
+//			tdbDataSet.end();
+//		}
 		return tdbDataSet;
 	}
 
@@ -222,6 +198,9 @@ public class Ontology extends OntologyWrapper
 
 		Model base = tdbDataSet.getNamedModel(identifier);
 
+		OntModelSpec tdbSpec = new OntModelSpec(reasonerSpec);
+		tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
+		
 		OntModel _o = ModelFactory.createOntologyModel(tdbSpec, base);
 
 		o = new Ontology(_o, identifier);
@@ -262,6 +241,9 @@ public class Ontology extends OntologyWrapper
 			throw new RuntimeException("Ontology already exists with that identifier");
 		}
 
+		OntModelSpec tdbSpec = new OntModelSpec(reasonerSpec);
+		tdbSpec.setImportModelGetter(new OntologyTDBModelGetter(tdbDataSet));
+		
 		OntModel o = ModelFactory.createOntologyModel(tdbSpec);
 
 		tdbDataSet.addNamedModel(identifier, o);
@@ -695,17 +677,6 @@ public class Ontology extends OntologyWrapper
 		ret.putAll(getObjectProperties());
 
 		return ret;
-	}
-
-	@Override
-	protected void finalize() throws Throwable
-	{
-		if (jenaModel != null)
-		{
-			System.out.println("Saving Model.");
-			jenaModel.close();
-		}
-		super.finalize();
 	}
 
 	public void close(boolean soft)
