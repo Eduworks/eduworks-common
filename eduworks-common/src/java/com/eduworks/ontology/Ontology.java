@@ -37,6 +37,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ReadWrite;
 import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -44,6 +45,10 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.impl.InfModelImpl;
+import com.hp.hpl.jena.reasoner.InfGraph;
+import com.hp.hpl.jena.reasoner.Reasoner;
+import com.hp.hpl.jena.reasoner.ReasonerRegistry;
 import com.hp.hpl.jena.tdb.TDB;
 import com.hp.hpl.jena.tdb.TDBFactory;
 import com.hp.hpl.jena.tdb.TDBLoader;
@@ -57,6 +62,8 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 public class Ontology extends OntologyWrapper
 {
 
+	public static boolean debug = false;
+	
 	public static final String extension = ".owl";
 
 	private static String defaultURI = "http://www.eduworks.com/";
@@ -163,6 +170,7 @@ public class Ontology extends OntologyWrapper
 	 */
 	public static Ontology loadOntology(Dataset tdbDataSet,String identifier)
 	{
+		long dt = System.currentTimeMillis();
 		if (identifier == null)
 		{
 			throw new NullPointerException();
@@ -203,10 +211,12 @@ public class Ontology extends OntologyWrapper
 		
 		OntModel _o = ModelFactory.createOntologyModel(tdbSpec, base);
 
-		o = new Ontology(_o, identifier);
+		o = new Ontology(_o, identifier,tdbDataSet);
 
 //		EwCache.getCache("OntologyCache", 20).put(identifier, o);
 
+		if (debug) System.out.println("Load Ontology took: " + (System.currentTimeMillis()-dt) + " millis.");
+		
 		return o;
 	}
 
@@ -222,6 +232,7 @@ public class Ontology extends OntologyWrapper
 	 */
 	public static Ontology createOntology(Dataset tdbDataSet,String identifier)
 	{
+		long dt = System.currentTimeMillis();
 		if (identifier.isEmpty())
 		{
 			throw new RuntimeException("Ontology Identifier cannot be empty");
@@ -251,12 +262,14 @@ public class Ontology extends OntologyWrapper
 		o = ModelFactory.createOntologyModel(tdbSpec, tdbDataSet.getNamedModel(identifier));
 		com.hp.hpl.jena.ontology.Ontology ont = o.createOntology(identifier);
 
-		return new Ontology(o, identifier);
+		if (debug) System.out.println("Create Ontology took: " + (System.currentTimeMillis()-dt) + " millis.");
+		return new Ontology(o, identifier,tdbDataSet);
 	}
 
 	/* Ontology Instance Properties */
 
 	private OntModel jenaModel;
+	private Dataset dataSet;
 
 	private String baseIRI;
 	private String identifier;
@@ -271,12 +284,14 @@ public class Ontology extends OntologyWrapper
 	 * 
 	 * @param o
 	 *            - OntModel to be wrapped
+	 * @param dataSet 
 	 */
-	private Ontology(OntModel o, String identifier)
+	private Ontology(OntModel o, String identifier, Dataset dataSet)
 	{
 		this.jenaModel = o;
 		this.identifier = identifier;
 		this.baseIRI = identifier;
+		this.dataSet = dataSet;
 	}
 
 	/**
@@ -477,6 +492,7 @@ public class Ontology extends OntologyWrapper
 
 	public OntologyInstance getInstance(String instanceId, boolean local)
 	{
+		long dt = System.currentTimeMillis();
 		String iri = null;
 
 		Set<String> testedIris = new HashSet<String>();
@@ -504,8 +520,11 @@ public class Ontology extends OntologyWrapper
 
 			for (com.hp.hpl.jena.ontology.Ontology o : jenaModel.listOntologies().toSet())
 			{
+				long dt2 = System.currentTimeMillis();
 				String tempUri = o.getURI() + "#" + id;
-				if (jenaModel.contains(ResourceFactory.createResource(tempUri), RDF.type, RDFS.Resource))
+				Resource createdResource = ResourceFactory.createResource(tempUri);
+
+				if (jenaModel.contains(createdResource, RDF.type, RDFS.Resource))
 				{
 					iri = tempUri;
 					break;
@@ -514,6 +533,7 @@ public class Ontology extends OntologyWrapper
 				{
 					testedIris.add(tempUri);
 				}
+				if (debug) System.out.println("Get Instance (CreateResource) took: " + (System.currentTimeMillis()-dt2) + " millis.");
 			}
 		}
 
@@ -531,11 +551,12 @@ public class Ontology extends OntologyWrapper
 
 		if (jInstance == null)
 		{
-			throw new RuntimeException("Individual (id: " + instanceId + ")Doesn't Exist");
+			throw new RuntimeException("Individual (id: " + instanceId + ") Doesn't Exist");
 		}
 
 		OntologyInstance ontologyInstance = new OntologyInstance(jInstance, this);
 
+		if (debug) System.out.println("Get Instance took: " + (System.currentTimeMillis()-dt) + " millis.");
 		return ontologyInstance;
 	}
 
