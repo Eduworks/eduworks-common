@@ -55,7 +55,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 public class Ontology extends OntologyWrapper
 {
 
-	public static boolean debug = false;
+	public static boolean debug = true;
 	
 	public static final String extension = ".owl";
 
