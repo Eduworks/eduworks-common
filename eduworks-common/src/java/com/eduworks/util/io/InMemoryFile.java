@@ -13,6 +13,7 @@ public class InMemoryFile
 	public String name;
 	public String mime;
 	public byte[] data;
+	public String path;
 	public InMemoryFile()
 	{
 		// TODO Auto-generated constructor stub
