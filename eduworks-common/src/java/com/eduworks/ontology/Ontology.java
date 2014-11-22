@@ -492,8 +492,11 @@ public class Ontology extends OntologyWrapper
 		{
 			if(debug) System.out.println("Get Instance used Cached Value");
 			
-			if(!instanceCache.get(instanceId).getJenaIndividual().getModel().isClosed())
+			if(!instanceCache.get(instanceId).getJenaIndividual().getModel().isClosed()){
 				return instanceCache.get(instanceId);
+			}else{
+				instanceCache.remove(instanceId);
+			}
 		}
 		
 		long dt = System.currentTimeMillis();
