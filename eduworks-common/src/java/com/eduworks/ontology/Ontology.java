@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.eduworks.lang.EwList;
+import com.eduworks.lang.util.EwCache;
 import com.hp.hpl.jena.ontology.DatatypeProperty;
 import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.ObjectProperty;
@@ -61,7 +62,7 @@ public class Ontology extends OntologyWrapper
 
 	private static String defaultURI = "http://www.eduworks.com/";
 
-	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MINI_RULE_INF;
+	private static OntModelSpec reasonerSpec = OntModelSpec.OWL_MEM_MICRO_RULE_INF;
 
 	// JENA Manager Things
 	private static OntDocumentManager jenaManager = OntDocumentManager.getInstance();
@@ -483,8 +484,18 @@ public class Ontology extends OntologyWrapper
 		return getInstance(instanceId, false);
 	}
 
+	private static EwCache<String, OntologyInstance> instanceCache = new EwCache<String, OntologyInstance>(15);
+	
 	public OntologyInstance getInstance(String instanceId, boolean local)
 	{
+		if(instanceCache.get(instanceId) != null)
+		{
+			if(debug) System.out.println("Get Instance used Cached Value");
+			
+			if(!instanceCache.get(instanceId).getJenaIndividual().getModel().isClosed())
+				return instanceCache.get(instanceId);
+		}
+		
 		long dt = System.currentTimeMillis();
 		String iri = null;
 
@@ -549,6 +560,8 @@ public class Ontology extends OntologyWrapper
 
 		OntologyInstance ontologyInstance = new OntologyInstance(jInstance, this);
 
+		instanceCache.put(instanceId, ontologyInstance);
+		
 		if (debug) System.out.println("Get Instance took: " + (System.currentTimeMillis()-dt) + " millis.");
 		return ontologyInstance;
 	}
