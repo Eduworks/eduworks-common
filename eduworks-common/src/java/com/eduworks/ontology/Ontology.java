@@ -56,7 +56,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 public class Ontology extends OntologyWrapper
 {
 
-	public static boolean debug = false;
+	public static boolean debug = true;
 	
 	public static final String extension = ".owl";
 
@@ -491,8 +491,8 @@ public class Ontology extends OntologyWrapper
 		if(instanceCache.get(instanceId) != null)
 		{
 			if(debug) System.out.println("Get Instance used Cached Value");
-			
-			if(!instanceCache.get(instanceId).getJenaIndividual().getModel().isClosed()){
+	
+			if(!instanceCache.get(instanceId).getJenaIndividual().getModel().isClosed() && instanceCache.get(instanceId).getJenaIndividual().getModel().getGraph() == jenaModel.getGraph()){
 				return instanceCache.get(instanceId);
 			}else{
 				instanceCache.remove(instanceId);
