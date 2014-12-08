@@ -237,7 +237,8 @@ public class EwThreading
 		}
 		catch (RejectedExecutionException e)
 		{
-			return fork(r);
+//			return fork(r);
+			throw new RuntimeException(e);
 		}
 	}
 
