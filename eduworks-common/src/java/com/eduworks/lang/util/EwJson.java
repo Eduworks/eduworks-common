@@ -364,15 +364,11 @@ public class EwJson
 	@SuppressWarnings("unchecked")
 	public static List getValues(JSONObject edges) throws JSONException
 	{
-		final List<Object> keys = new ArrayList<Object>();
+		final List<Object> values = new ArrayList<Object>();
 		final Iterator<String> sortedKeys = edges.keys();
 
-		while (sortedKeys.hasNext()) keys.add(edges.get(sortedKeys.next()));
-		if (!(edges instanceof EwJsonObject))
-		if (keys.size() > 0)
-			if (keys.get(0) instanceof String)
-				return EwList.sort(new EwList<String>(keys));
-		return keys;
+		while (sortedKeys.hasNext()) values.add(edges.get(sortedKeys.next()));
+		return values;
 	}
 	@SuppressWarnings("unchecked")
 	public static List<String> getKeysUnsorted(JSONObject edges)
