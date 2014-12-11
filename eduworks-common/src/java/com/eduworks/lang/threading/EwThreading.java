@@ -18,21 +18,22 @@ import com.eduworks.lang.EwList;
 
 public class EwThreading
 {
-	static List<ThreadPoolExecutor>	tpses	= Collections.synchronizedList(new EwList<ThreadPoolExecutor>());
-	static Thread					watcher	= null;
-	static Logger					log		= Logger.getLogger(EwThreading.class);
-	public static int				threads	= Math.min(50, Math.max(10, Runtime.getRuntime().availableProcessors() * 5));
+	static List<ThreadPoolExecutor> tpses = Collections.synchronizedList(new EwList<ThreadPoolExecutor>());
+	static Thread watcher = null;
+	static Logger log = Logger.getLogger(EwThreading.class);
+	public static int threads = Math.min(50, Math.max(10, Runtime.getRuntime().availableProcessors() * 5));
 
 	public static long getTaskCount()
 	{
 		int taskCount = 0;
 		try
 		{
-		for (ThreadPoolExecutor tps : tpses)
-		taskCount += tps.getTaskCount() - tps.getCompletedTaskCount();
-		} catch (ConcurrentModificationException ex)
+			for (ThreadPoolExecutor tps : tpses)
+				taskCount += tps.getTaskCount() - tps.getCompletedTaskCount();
+		}
+		catch (ConcurrentModificationException ex)
 		{
-			
+
 		}
 		return taskCount;
 	}
@@ -84,11 +85,11 @@ public class EwThreading
 
 	static synchronized ThreadPoolExecutor startThreadPool()
 	{
-		if (getTps() != null) return getTps();
+		if (getTps() != null)
+			return getTps();
 		log.info("Using " + threads + " number of threads.");
 		while (tpses.size() - 1 < getThreadLevel())
-			tpses.add(new ThreadPoolExecutor(threads, threads, 60L, TimeUnit.SECONDS,
-					new LinkedBlockingQueue<Runnable>()));
+			tpses.add(new ThreadPoolExecutor(threads, threads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
 		int level = tpses.size() - 1;
 		try
 		{
@@ -144,9 +145,8 @@ public class EwThreading
 										threads++;
 										tpses.get(level).setCorePoolSize(threads);
 										tpses.get(level).setMaximumPoolSize(threads);
-										log.info("Detect stuck. Scaling thread count. " + getTaskCount(level)
-												+ " tasks, " + tpses.get(level).getActiveCount() + " threads, Now at "
-												+ threads);
+										log.info("Detect stuck. Scaling thread count. " + getTaskCount(level) + " tasks, " + tpses.get(level).getActiveCount()
+												+ " threads, Now at " + threads);
 									}
 								}
 								else if (currentThreads != threads)
@@ -154,8 +154,8 @@ public class EwThreading
 									threads--;
 									tpses.get(level).setCorePoolSize(threads);
 									tpses.get(level).setMaximumPoolSize(threads);
-									log.info("Stick unstuck, scaling back. " + getTaskCount(level) + " tasks, "
-											+ tpses.get(level).getActiveCount() + " threads, Now at " + threads);
+									log.info("Stick unstuck, scaling back. " + getTaskCount(level) + " tasks, " + tpses.get(level).getActiveCount()
+											+ " threads, Now at " + threads);
 								}
 								completedTaskCount = tpses.get(level).getCompletedTaskCount();
 							}
@@ -218,7 +218,7 @@ public class EwThreading
 			final int nextLevel = getThreadLevel() + 1;
 			return tps.submit(new MyRunnable()
 			{
-				int	level	= nextLevel;
+				int level = nextLevel;
 
 				@Override
 				public void run()
@@ -237,16 +237,16 @@ public class EwThreading
 		}
 		catch (RejectedExecutionException e)
 		{
-//			return fork(r);
+			// return fork(r);
 			throw new RuntimeException(e);
 		}
 	}
 
 	public static class MyFutureList
 	{
-		private static final long	serialVersionUID	= -8460295382838816873L;
+		private static final long serialVersionUID = -8460295382838816873L;
 
-		List<Future<?>>				list				= Collections.synchronizedList(new EwList<Future<?>>());
+		List<Future<?>> list = Collections.synchronizedList(new EwList<Future<?>>());
 
 		public void nowPause()
 		{
@@ -320,8 +320,8 @@ public class EwThreading
 
 	public static abstract class MyRunnable implements Runnable, Cloneable
 	{
-		protected int	i;
-		public Object	o;
+		protected int i;
+		public Object o;
 
 		public Object clone() throws CloneNotSupportedException
 		{
