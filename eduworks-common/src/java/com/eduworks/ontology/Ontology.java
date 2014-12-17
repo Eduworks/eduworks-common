@@ -484,21 +484,8 @@ public class Ontology extends OntologyWrapper
 		return getInstance(instanceId, false);
 	}
 
-	private static EwCache<String, OntologyInstance> instanceCache = new EwCache<String, OntologyInstance>(15);
-	
 	public OntologyInstance getInstance(String instanceId, boolean local)
 	{
-		if(instanceCache.get(instanceId) != null)
-		{
-			if(debug) System.out.println("Get Instance used Cached Value");
-	
-			if(!instanceCache.get(instanceId).getJenaIndividual().getModel().isClosed() && instanceCache.get(instanceId).getJenaIndividual().getModel().getGraph() == jenaModel.getGraph()){
-				return instanceCache.get(instanceId);
-			}else{
-				instanceCache.remove(instanceId);
-			}
-		}
-		
 		long dt = System.currentTimeMillis();
 		String iri = null;
 
@@ -563,8 +550,6 @@ public class Ontology extends OntologyWrapper
 
 		OntologyInstance ontologyInstance = new OntologyInstance(jInstance, this);
 
-		instanceCache.put(instanceId, ontologyInstance);
-		
 		if (debug) System.out.println("Get Instance took: " + (System.currentTimeMillis()-dt) + " millis.");
 		return ontologyInstance;
 	}
