@@ -56,7 +56,7 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 public class Ontology extends OntologyWrapper
 {
 
-	public static boolean debug = true;
+	public static boolean debug = false;
 	
 	public static final String extension = ".owl";
 
@@ -127,6 +127,8 @@ public class Ontology extends OntologyWrapper
 	{
 		Dataset tdbDataSet = null;
 
+//		TDBFactory.reset();
+		
 		tdbDataSet = TDBFactory.createDataset(directory);
 
 		// STILL HACKY, BUT PREVENTS THE ALREADY CLOSED EXCEPTION IF WE ARE
