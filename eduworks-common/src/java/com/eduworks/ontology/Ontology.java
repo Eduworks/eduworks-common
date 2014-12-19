@@ -176,13 +176,16 @@ public class Ontology extends OntologyWrapper
 			throw new RuntimeException("Ontology Identifier cannot be empty");
 		}
 
-		if (defaultURI.endsWith("/"))
-		{
-			identifier = defaultURI + identifier;
-		}
-		else
-		{
-			identifier = defaultURI + "/" + identifier;
+		// TODO: Probably want to use a real URL Validator here
+		if(!identifier.startsWith("http")){
+			if (defaultURI.endsWith("/"))
+			{
+				identifier = defaultURI + identifier;
+			}
+			else
+			{
+				identifier = defaultURI + "/" + identifier;
+			}
 		}
 
 		Ontology o = null;
@@ -199,7 +202,7 @@ public class Ontology extends OntologyWrapper
 		{
 			throw new RuntimeException("Model Doesn't Exist with Identifier: " + identifier);
 		}
-
+		
 		Model base = tdbDataSet.getNamedModel(identifier);
 
 		OntModelSpec tdbSpec = new OntModelSpec(reasonerSpec);
@@ -386,7 +389,13 @@ public class Ontology extends OntologyWrapper
 		String uri = null;
 		for (com.hp.hpl.jena.ontology.Ontology o : jenaModel.listOntologies().toSet())
 		{
-			String tempUri = o.getURI() + "#" + classId;
+			String tempUri;
+			if(o.getURI().endsWith("#")){
+				tempUri  = o.getURI() + classId;
+			}else{
+				tempUri = o.getURI() + "#" + classId;
+			}
+			
 
 			if (jenaModel.contains(ResourceFactory.createResource(tempUri), RDF.type, OWL.Class))
 			{
