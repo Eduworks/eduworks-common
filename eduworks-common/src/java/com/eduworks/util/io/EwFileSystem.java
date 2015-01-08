@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.util.Collection;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.DeflaterInputStream;
@@ -84,7 +85,7 @@ public class EwFileSystem
 
 	public static File copyPackage(final String pkg, final Class<? extends Object> inThisClassJar) throws IOException
 	{
-		Set<URL> urlsForCurrentClasspath = ClasspathHelper.forManifest();// forPackage(pkg,
+		Collection<URL> urlsForCurrentClasspath = ClasspathHelper.forManifest();// forPackage(pkg,
 																			// ClassLoader.getSystemClassLoader());
 		EwSet<URL> urls = new EwSet<URL>();
 		for (URL url : urlsForCurrentClasspath)
@@ -116,7 +117,7 @@ public class EwFileSystem
 
 	public static File copyPackageToRoot(final String pkg, final Class<? extends Object> inThisClassJar) throws IOException
 	{
-		Set<URL> urlsForCurrentClasspath = ClasspathHelper.forManifest();// forPackage(pkg,
+		Collection<URL> urlsForCurrentClasspath = ClasspathHelper.forManifest();// forPackage(pkg,
 																			// ClassLoader.getSystemClassLoader());
 		EwSet<URL> urls = new EwSet<URL>();
 		for (URL url : urlsForCurrentClasspath)
@@ -148,7 +149,7 @@ public class EwFileSystem
 
 	public static File copyPackageChildrenToRoot(final String pkg, final Class<? extends Object> inThisClassJar) throws IOException
 	{
-		Set<URL> urlsForCurrentClasspath = ClasspathHelper.forManifest();// forPackage(pkg,
+		Collection<URL> urlsForCurrentClasspath = ClasspathHelper.forManifest();// forPackage(pkg,
 																			// ClassLoader.getSystemClassLoader());
 		EwSet<URL> urls = new EwSet<URL>();
 		for (URL url : urlsForCurrentClasspath)
