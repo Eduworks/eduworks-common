@@ -1,8 +1,11 @@
 package com.eduworks.lang.json.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -578,11 +581,15 @@ public class EwJsonObject extends JSONObject implements EwJsonCollection
 
 	public Iterator sortedKeys()
 	{
-		return new TreeSet(keySet()).iterator();
+		List l = new ArrayList(keySet());
+		Collections.sort(l);
+		return l.iterator();
 	}
 	public static Iterator sortedKeys(JSONObject jo)
 	{
-		return new TreeSet(jo.keySet()).iterator();
+		List l = new ArrayList(jo.keySet());
+		Collections.sort(l);
+		return l.iterator();
 	}
 
 	@SuppressWarnings("unchecked")
