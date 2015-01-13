@@ -214,12 +214,10 @@ public class OntologyInstance extends OntologyWrapper {
 				String propertyId = k.next();
 				
 				try{
-					String valString;
 					// Make sure that Instance Values has the required property and it is not an empty value
-					if(newVals.has(propertyId) && 
-							!(valString = newVals.getString(propertyId)).isEmpty() && 
-							(!valString.startsWith("[") || !valString.endsWith("]") || 
-									newVals.getJSONArray(propertyId).length() != 0)){
+					if(newVals.has(propertyId) &&  
+									newVals.optJSONArray(propertyId) != null && newVals.getJSONArray(propertyId).length() != 0
+						){
 							
 							// Get the instance value for the key
 							Object value = newVals.get(propertyId);
