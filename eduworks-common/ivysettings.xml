@@ -14,6 +14,7 @@
 	  <ibiblio name="info-bliki-repository" m2compatible="true" root="http://gwtwiki.googlecode.com/svn/maven-snapshot-repository/" />
 	  <ibiblio name="ow2" m2compatible="true" root="http://repository.ow2.org/nexus/content/repositories/ow2-legacy/" />
       <ibiblio name="jsi" m2compatible="true" root="http://sourceforge.net/projects/jsi/files/m2_repo" />
-    </chain>
+	  <ibiblio name="eduworks" m2compatible="true" root="http://research.eduworks.com/repo" />
+	  </chain>
   </resolvers>
 </ivysettings>
