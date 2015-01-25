@@ -9,6 +9,7 @@ public class EwStringUtil
 		StringBuilder result = new StringBuilder();
 		for (int i = 0;i < strings.length;i++)
 		{
+			if (strings[i] == null) continue;
 			if (i > 0)
 				result.append(delim);
 			result.append(strings[i]);
