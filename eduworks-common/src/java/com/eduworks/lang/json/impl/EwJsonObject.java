@@ -585,13 +585,6 @@ public class EwJsonObject extends JSONObject implements EwJsonCollection
 		Collections.sort(l);
 		return l.iterator();
 	}
-	public static Iterator sortedKeys(JSONObject jo)
-	{
-		List l = new ArrayList(jo.keySet());
-		Collections.sort(l);
-		return l.iterator();
-	}
-
 	@SuppressWarnings("unchecked")
 	public EwList<String> keySetUnsorted()
 	{
