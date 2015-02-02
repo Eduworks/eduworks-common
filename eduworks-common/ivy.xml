@@ -55,7 +55,8 @@
 	<exclude org="javax.sql"/>
 	<exclude org="javax.servlet"/>
 	<exclude org="javax.transaction"/>
-	<exclude org="google-collect"/>
+	<exclude module="google-collections"/>
+	<exclude org="com.google.collections"/>
      
   </dependencies>
 </ivy-module>
