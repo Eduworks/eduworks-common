@@ -25,20 +25,27 @@ public class EwNumerics
 		}
 		return results;
 	}
-	
+
 	public static double rootMeanSquared(List<Double> value)
 	{
 		Double result = 0.0;
 		for (Double d : value)
 			result += d*d;
-		return Math.sqrt(result);
+		return Math.sqrt(result/value.size());
+	}
+	public static double sum(List<Double> value)
+	{
+		Double result = 0.0;
+		for (Double d : value)
+			result += d;
+		return result;
 	}
 	public static double rootMeanSquared(JSONArray value) throws JSONException
 	{
 		Double result = 0.0;
 		for (int i = 0;i < value.length();i++)
 			result += value.getDouble(i)*value.getDouble(i);
-		return Math.sqrt(result);
+		return Math.sqrt(result/value.length());
 	}
 	public static double average(List<Double> value)
 	{

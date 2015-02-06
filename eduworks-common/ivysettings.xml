@@ -15,6 +15,7 @@
 	  <ibiblio name="ow2" m2compatible="true" root="http://repository.ow2.org/nexus/content/repositories/ow2-legacy/" />
       <ibiblio name="jsi" m2compatible="true" root="http://sourceforge.net/projects/jsi/files/m2_repo" />
 	  <ibiblio name="eduworks" m2compatible="true" root="http://research.eduworks.com/repo" />
+	  <ibiblio name="k3d" m2compatible="true" root="http://k3d.org/nexus/content/repositories/public" />
 	  </chain>
   </resolvers>
 </ivysettings>
