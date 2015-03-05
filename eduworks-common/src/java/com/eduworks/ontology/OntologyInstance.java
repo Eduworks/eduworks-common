@@ -159,12 +159,12 @@ public class OntologyInstance extends OntologyWrapper {
 				// TODO: Test this better
 				if(domains.length() == 0 || assertedClasses.size() == 0){
 					 // No domain specified, or no classes asserted for the instance so this property will be fine
-					properties.put(propId, checkPropertyValuesAgainstTypes(ont, propId, newValues.get(propId), null, false));
+					properties.put(propId, checkPropertyValuesAgainstTypes(ont, propId, newValues.get(propId), null, false, false));
 				
 				}else if(domains.length() == 1){ 
 					
 					if(assertedClasses.containsKey(domains.get(0))){
-						properties.put(propId, checkPropertyValuesAgainstTypes(ont, propId, newValues.get(propId), null, false));
+						properties.put(propId, checkPropertyValuesAgainstTypes(ont, propId, newValues.get(propId), null, false, false));
 					}else{
 						throw new RuntimeException("Domain of property <"+propId+"> ("+domains+") does not match asserted classes: "+assertedClasses.keySet());
 					}
@@ -176,7 +176,7 @@ public class OntologyInstance extends OntologyWrapper {
 						}
 					}
 					
-					properties.put(propId,  checkPropertyValuesAgainstTypes(ont, propId, newValues.get(propId), null, false));
+					properties.put(propId,  checkPropertyValuesAgainstTypes(ont, propId, newValues.get(propId), null, false, false));
 				}
 			}catch(JSONException e){
 				throw new RuntimeException("this shouldn't be happening");
@@ -214,9 +214,13 @@ public class OntologyInstance extends OntologyWrapper {
 				String propertyId = k.next();
 				
 				try{
+					JSONArray x = newVals.optJSONArray(propertyId);
+					String y = newVals.optString(propertyId);
+					
 					// Make sure that Instance Values has the required property and it is not an empty value
 					if(newVals.has(propertyId) &&  
-									newVals.optJSONArray(propertyId) != null && newVals.getJSONArray(propertyId).length() != 0
+									(newVals.optJSONArray(propertyId) != null ||
+									(newVals.optString(propertyId) != null && !newVals.getString(propertyId).isEmpty()))
 						){
 							
 							// Get the instance value for the key
@@ -226,7 +230,7 @@ public class OntologyInstance extends OntologyWrapper {
 							JSONArray valTypes = restrictions.getJSONArray(propertyId);
 							
 							// Check that the Value matches the required Types
-							value = checkPropertyValuesAgainstTypes(ont, propertyId, value, valTypes, false);
+							value = checkPropertyValuesAgainstTypes(ont, propertyId, value, valTypes, required, false);
 							
 							requiredVals.put(propertyId, value);
 							newVals.remove(propertyId);
@@ -242,10 +246,14 @@ public class OntologyInstance extends OntologyWrapper {
 		return requiredVals;
 	}
 	
-	private static JSONArray checkPropertyValuesAgainstTypes(Ontology ont, String propId, Object values, JSONArray types, boolean restricted){
+	private static JSONArray checkPropertyValuesAgainstTypes(Ontology ont, String propId, Object values, JSONArray types, boolean required, boolean restricted){
 		JSONArray checkedValues = new JSONArray();
 		
 		if(values instanceof JSONArray){
+			if(((JSONArray)values).length() == 0 && required){
+				throw new RuntimeException("Missing Required Property: " + propId);
+			}
+			
 			for(int i = 0; i < ((JSONArray)values).length(); i++){
 				
 				// TODO: Might want to catch exception here if we're looking at requirements (not restrictions, restrictions 
