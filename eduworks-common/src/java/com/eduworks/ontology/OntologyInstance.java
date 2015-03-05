@@ -213,10 +213,7 @@ public class OntologyInstance extends OntologyWrapper {
 			while(k.hasNext()){
 				String propertyId = k.next();
 				
-				try{
-					JSONArray x = newVals.optJSONArray(propertyId);
-					String y = newVals.optString(propertyId);
-					
+				try{	
 					// Make sure that Instance Values has the required property and it is not an empty value
 					if(newVals.has(propertyId) &&  
 									(newVals.optJSONArray(propertyId) != null ||
