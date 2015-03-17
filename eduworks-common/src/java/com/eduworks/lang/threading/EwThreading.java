@@ -23,6 +23,10 @@ public class EwThreading
 	static Logger log = Logger.getLogger(EwThreading.class);
 	public static int threads = Math.min(50, Math.max(10, Runtime.getRuntime().availableProcessors() * 5));
 
+	{
+		startThreadPool();
+	}
+	
 	public static long getTaskCount()
 	{
 		int taskCount = 0;
