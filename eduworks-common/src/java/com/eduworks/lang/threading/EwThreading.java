@@ -241,8 +241,9 @@ public class EwThreading
 		}
 		catch (RejectedExecutionException e)
 		{
-			// return fork(r);
-			throw new RuntimeException(e);
+			tpses.remove(getThreadLevel());
+			 return fork(r);
+//			throw new RuntimeException(e);
 		}
 	}
 
