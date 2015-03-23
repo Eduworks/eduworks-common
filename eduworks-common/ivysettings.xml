@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivysettings>
-  <settings defaultResolver="eduworks-common-ivyde-workspace-chain-resolver" overwriteMode="true"/>
+  <settings defaultResolver="eduworks-common-ivyde-workspace-chain-resolver"/>
   <resolvers>
     <chain name="eduworks-common-ivyde-workspace-chain-resolver">
 	  <!-- <ibiblio name="aduna" m2compatible="true" root="http://repo.aduna-software.org/maven2/releases/" /> -->
