@@ -220,7 +220,8 @@ public class EwThreading
 				while (getTaskCount(getThreadLevel()) > threads / 2)
 					EwThreading.sleep(10);
 			final int nextLevel = getThreadLevel() + 1;
-			return tps.submit(new MyRunnable()
+			MyRunnable run;
+			Future<?> submit = tps.submit(run = new MyRunnable()
 			{
 				int level = nextLevel;
 
@@ -238,6 +239,9 @@ public class EwThreading
 					}
 				}
 			});
+			run.f=submit;
+			r.f = submit;
+			return submit;
 		}
 		catch (RejectedExecutionException e)
 		{
@@ -327,6 +331,7 @@ public class EwThreading
 	{
 		protected int i;
 		public Object o;
+		public Future f;
 
 		public Object clone() throws CloneNotSupportedException
 		{

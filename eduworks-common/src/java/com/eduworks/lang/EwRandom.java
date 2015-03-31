@@ -12,6 +12,11 @@ public class EwRandom
 		return (Math.random() * 6.0) < 1;
 	}
 
+	public static int r(int max)
+	{
+		return (int) Math.floor(Math.random() * max);
+	}
+
 	public static String stringAny(int length)
 	{
 		byte[] bytes = new byte[length];
