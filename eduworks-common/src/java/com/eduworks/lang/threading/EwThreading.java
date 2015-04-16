@@ -332,6 +332,7 @@ public class EwThreading
 		protected int i;
 		public Object o;
 		public Future f;
+		public boolean cancel = false;
 
 		public Object clone() throws CloneNotSupportedException
 		{
