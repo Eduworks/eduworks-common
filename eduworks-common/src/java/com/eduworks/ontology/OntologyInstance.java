@@ -3,6 +3,7 @@ package com.eduworks.ontology;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.json.JSONArray;
@@ -616,6 +617,9 @@ public class OntologyInstance extends OntologyWrapper {
 			explicitModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ont.getJenaModel().getBaseModel());
 		}
 		
+		Set<String> objectPropIdList = ont.getObjectPropertyIdList();
+		Set<String> dataPropIdList = ont.getDataPropertyIdList();
+		
 		for(Statement stmt : jenaInstance.listProperties().toSet()){
 			if(!local || explicitModel.contains(stmt)){
 				
@@ -626,12 +630,12 @@ public class OntologyInstance extends OntologyWrapper {
 					String propId = getIdentifier(p.getURI());
 					
 					try{
-						if(ont.getObjectPropertyIdList().contains(propId)){
+						if(objectPropIdList.contains(propId)){
 							Resource val = stmt.getResource();
 							if(val != null){
 								instanceObj.append(propId, getIdentifier(val.getURI()));
 							}
-						}else if(ont.getDataPropertyIdList().contains(propId)){
+						}else if(dataPropIdList.contains(propId)){
 							Literal val = stmt.getLiteral();
 							if(val != null){
 								instanceObj.append(propId, val.getLexicalForm());

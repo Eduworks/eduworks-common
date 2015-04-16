@@ -324,9 +324,11 @@ public class OntologyProperty extends OntologyWrapper {
 	 */
 	public OntologyProperty(Ontology o, OWLProperty prop, OntProperty jena){
 		// TODO: May want to check whether ontology contains the property
+		o.getJenaModel().enterCriticalSection(true);
 		if(!o.getJenaModel().containsResource(jena)){
 			throw new RuntimeException("Property ("+jena.getId()+") is not contained in the ontology at: "+o.getTDBDir());
 		}
+		o.getJenaModel().leaveCriticalSection();
 		
 		ont = o;
 		jenaProp = jena;
