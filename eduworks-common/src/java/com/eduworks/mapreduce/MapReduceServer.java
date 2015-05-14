@@ -10,11 +10,13 @@ import java.rmi.server.UnicastRemoteObject;
 
 import org.apache.log4j.Logger;
 
+import sun.rmi.server.UnicastServerRef;
+
 public class MapReduceServer
 {
 
 	public Logger				log			= Logger.getLogger(MapReduceManager.class);
-	public MapReduceTransport	shipping;
+	public MapReduceListener	shipping;
 	public boolean				isChecking	= false;
 	public boolean				debug		= true;
 	public long					lastServiceMs;
@@ -60,8 +62,9 @@ public class MapReduceServer
 		try
 		{
 			if (debug)
-				log.info("Binding to port " + port);
+				log.info("Binding to port " + port + " w/name: " + name);
 			Registry registry = LocateRegistry.createRegistry(port);
+			log.debug(registry.toString());
 			registry.rebind(name, myListener);
 			if (debug)
 				log.info("Binding complete.");
