@@ -165,6 +165,7 @@ public class EwDistributedThreading
 		lastHeartbeat = System.currentTimeMillis();
 		try
 		{
+			
 			String versionNumber = EwVersion.getVersion();
 			String tasks = Long.toString(EwThreading.getTaskCount());
 			if (mrs == null)

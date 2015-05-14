@@ -10,8 +10,6 @@ import java.rmi.server.UnicastRemoteObject;
 
 import org.apache.log4j.Logger;
 
-import sun.rmi.server.UnicastServerRef;
-
 public class MapReduceServer
 {
 

@@ -21,7 +21,7 @@ public class EwThreading
 	static List<ThreadPoolExecutor> tpses = Collections.synchronizedList(new EwList<ThreadPoolExecutor>());
 	static Thread watcher = null;
 	static Logger log = Logger.getLogger(EwThreading.class);
-	public static int threads = Math.min(50, Math.max(10, Runtime.getRuntime().availableProcessors() * 5));
+	public static int threads = Math.min(50, Math.max(5, Runtime.getRuntime().availableProcessors() * 5));
 
 	{
 		startThreadPool();
@@ -58,6 +58,8 @@ public class EwThreading
 	public static int getThreadLevel()
 	{
 		int level = 0;
+		if (Thread.currentThread().getName().length() > 5) 
+			return level;
 		try
 		{
 			level = Integer.parseInt(Thread.currentThread().getName());
@@ -114,70 +116,70 @@ public class EwThreading
 
 		}
 		final Thread thisThread = Thread.currentThread();
-		if (watcher == null)
-		{
-			watcher = new Thread(new Runnable()
-			{
-
-				@Override
-				public void run()
-				{
-					for (int level = 0; level < tpses.size(); level++)
-					{
-						int currentThreads = threads;
-						long completedTaskCount = tpses.get(level).getCompletedTaskCount();
-						int secondsStuck = 0;
-						while (thisThread.isAlive())
-						{
-							try
-							{
-								Thread.sleep(1000);
-								if (tpses.get(level).getActiveCount() > 0 && getTaskCount() > 0)
-									if (tpses.get(level).getCompletedTaskCount() == completedTaskCount)
-									{
-										if (secondsStuck <= 10)
-											secondsStuck++;
-									}
-									else if (secondsStuck > 0)
-										secondsStuck--;
-									else if (secondsStuck > 0)
-										secondsStuck--;
-								if (secondsStuck > 10)
-								{
-									if (getTaskCount(level) > threads && threads < 100)
-									{
-										threads++;
-										tpses.get(level).setCorePoolSize(threads);
-										tpses.get(level).setMaximumPoolSize(threads);
-										log.info("Detect stuck. Scaling thread count. " + getTaskCount(level) + " tasks, " + tpses.get(level).getActiveCount()
-												+ " threads, Now at " + threads);
-									}
-								}
-								else if (currentThreads != threads)
-								{
-									threads--;
-									tpses.get(level).setCorePoolSize(threads);
-									tpses.get(level).setMaximumPoolSize(threads);
-									log.info("Stick unstuck, scaling back. " + getTaskCount(level) + " tasks, " + tpses.get(level).getActiveCount()
-											+ " threads, Now at " + threads);
-								}
-								completedTaskCount = tpses.get(level).getCompletedTaskCount();
-							}
-							catch (InterruptedException e)
-							{
-								e.printStackTrace();
-							}
-						}
-
-						if (tpses.get(level) != null)
-							tpses.get(level).shutdown();
-						tpses.remove(0);
-					}
-				}
-			});
-			watcher.setName("Watcher thread.");
-			watcher.start();
-		}
+//		if (watcher == null)
+//		{
+//			watcher = new Thread(new Runnable()
+//			{
+//
+//				@Override
+//				public void run()
+//				{
+//					for (int level = 0; level < tpses.size(); level++)
+//					{
+//						int currentThreads = threads;
+//						long completedTaskCount = tpses.get(level).getCompletedTaskCount();
+//						int secondsStuck = 0;
+//						while (thisThread.isAlive())
+//						{
+//							try
+//							{
+//								Thread.sleep(1000);
+//								if (tpses.get(level).getActiveCount() > 0 && getTaskCount() > 0)
+//									if (tpses.get(level).getCompletedTaskCount() == completedTaskCount)
+//									{
+//										if (secondsStuck <= 10)
+//											secondsStuck++;
+//									}
+//									else if (secondsStuck > 0)
+//										secondsStuck--;
+//									else if (secondsStuck > 0)
+//										secondsStuck--;
+//								if (secondsStuck > 10)
+//								{
+//									if (getTaskCount(level) > threads && threads < 100)
+//									{
+//										threads++;
+//										tpses.get(level).setCorePoolSize(threads);
+//										tpses.get(level).setMaximumPoolSize(threads);
+//										log.info("Detect stuck. Scaling thread count. " + getTaskCount(level) + " tasks, " + tpses.get(level).getActiveCount()
+//												+ " threads, Now at " + threads);
+//									}
+//								}
+//								else if (currentThreads != threads)
+//								{
+//									threads--;
+//									tpses.get(level).setCorePoolSize(threads);
+//									tpses.get(level).setMaximumPoolSize(threads);
+//									log.info("Stick unstuck, scaling back. " + getTaskCount(level) + " tasks, " + tpses.get(level).getActiveCount()
+//											+ " threads, Now at " + threads);
+//								}
+//								completedTaskCount = tpses.get(level).getCompletedTaskCount();
+//							}
+//							catch (InterruptedException e)
+//							{
+//								e.printStackTrace();
+//							}
+//						}
+//
+//						if (tpses.get(level) != null)
+//							tpses.get(level).shutdown();
+//						tpses.remove(0);
+//					}
+//				}
+//			});
+//			watcher.setName("Watcher thread.");
+//			watcher.start();
+//		}
 		return tpses.get(level);
 	}
 
@@ -254,6 +256,7 @@ public class EwThreading
 	public static class MyFutureList
 	{
 		private static final long serialVersionUID = -8460295382838816873L;
+		long ms = System.currentTimeMillis();
 
 		List<Future<?>> list = Collections.synchronizedList(new EwList<Future<?>>());
 
@@ -270,7 +273,7 @@ public class EwThreading
 		public void nowPause(boolean report)
 		{
 			int pause = 1;
-			long ms = System.currentTimeMillis();
+			long zero = System.currentTimeMillis();
 			Date reportNext = new Date();
 			while (true)
 			{
@@ -280,7 +283,7 @@ public class EwThreading
 				{
 					if (System.in.available() >= 1 && System.in.read() == '`')
 					{
-						System.out.println("Aborted.");
+						log.debug("Aborted.");
 						return;
 					}
 				}
@@ -302,9 +305,15 @@ public class EwThreading
 				d.setTime(d.getTime() - 10000);
 				if (report && reportNext.before(d))
 				{
-					long duration = System.currentTimeMillis() - ms;
-					double perSecond = (double) (list.size() - i) / ((double) duration / 1000.0);
-					System.out.println("Waiting on " + i + " tasks to complete. " + perSecond + " per second.");
+					long current = System.currentTimeMillis();
+					long future = (long) ((((((double) list.size()) / ((double) (list.size()-i))) - 1.0) * (current - zero)) + current);
+					String stuff = "Started: " + new Date(zero).toString() + " Estd Done: "
+							+ new Date(future).toString();
+					log.info("So far " + (list.size()-i) + "/" + list.size() + "(" + ((double) (list.size()-i))
+							/ ((double) list.size()) + ") " + stuff);
+//					long duration = System.currentTimeMillis() - ms;
+//					double perSecond = (double) (list.size() - i) / ((double) duration / 1000.0);
+//					log.debug("Waiting on " + i + " tasks to complete. " + perSecond + " per second.");
 					reportNext = new Date();
 				}
 				try
@@ -443,6 +452,11 @@ public class EwThreading
 		{
 			invokeLater(runnable);
 		}
+	}
+
+	public static void execSynchronous(MyFutureList placeToAdd, MyRunnable myRunnable)
+	{
+		myRunnable.run();
 	}
 
 }
