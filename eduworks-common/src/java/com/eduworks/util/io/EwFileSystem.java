@@ -364,6 +364,7 @@ public class EwFileSystem
 				uri = new URL(URLDecoder.decode(path));
 			}
 			URLConnection connection = uri.openConnection();
+			connection.setConnectTimeout(timeout);
 			connection.setReadTimeout(timeout);
 			connection.setRequestProperty("Accept", "*/*");
 			connection.connect();
