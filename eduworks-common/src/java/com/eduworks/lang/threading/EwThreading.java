@@ -21,10 +21,21 @@ public class EwThreading
 	static List<ThreadPoolExecutor> tpses = Collections.synchronizedList(new EwList<ThreadPoolExecutor>());
 	static Thread watcher = null;
 	static Logger log = Logger.getLogger(EwThreading.class);
-	public static int threads = Math.min(50, Math.max(2, Runtime.getRuntime().availableProcessors()));
+	public static int threads = Math.min(50, Math.max(5, Runtime.getRuntime().availableProcessors() * 3));
 
 	{
 		startThreadPool();
+	}
+
+
+	public static void setThreadCount(int threadBoost)
+	{
+		for (ThreadPoolExecutor tps : tpses)
+		{
+			tps.setCorePoolSize(threadBoost);
+			tps.setMaximumPoolSize(threadBoost);
+		}
+		
 	}
 	
 	public static long getTaskCount()

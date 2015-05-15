@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
 
 import com.eduworks.lang.EwList;
 import com.eduworks.lang.threading.EwThreading;
@@ -17,12 +18,12 @@ import com.eduworks.util.Tuple;
 
 public class MapReduceClient
 {
-	public Logger					log			= Logger.getLogger(MapReduceManager.class);
-	public List<MapReduceStatus>	peers		= Collections.synchronizedList(new EwList<MapReduceStatus>());
-	public boolean					isChecking	= false;
-	public boolean					debug		= true;
-	public long						lastServiceMs;
-	
+	public Logger log = Logger.getLogger(MapReduceManager.class);
+	public List<MapReduceStatus> peers = Collections.synchronizedList(new EwList<MapReduceStatus>());
+	public boolean isChecking = false;
+	public boolean debug = true;
+	public long lastServiceMs;
+
 	public void cleanup()
 	{
 	}
@@ -36,29 +37,13 @@ public class MapReduceClient
 		{
 			MapReduceStatus status = new MapReduceStatus();
 			status.setHost(host.getFirst(), host.getSecond());
-			status.setState(MapReduceStatus.STATE.IN_QUESTION);
 			status.setI(i++);
 			status.setServiceName(name);
 			peers.add(status);
 
-			if (debug)
-				log.info("Established Peer: " + status);
+			// if (debug)
+			// log.info("Established Peer: " + status);
 		}
-	}
-
-	private void invokeCheckup()
-	{
-		// if (isChecking == true)
-		// return;
-		// isChecking = true;
-		// EwThreading.invokeLater(new Runnable()
-		// {
-		// public void run()
-		// {
-		checkup();
-		// isChecking = false;
-		// }
-		// });
 	}
 
 	public void checkup()
@@ -67,32 +52,39 @@ public class MapReduceClient
 		{
 			for (MapReduceStatus s : peers)
 			{
-				if (!s.notOK())
-					continue;
-				try
-				{
-					s.getInterface().ping();
-					s.setState(MapReduceStatus.STATE.OK);
-					if (debug)
-						log.info("Established connection to: " + s);
-				}
-				catch (RemoteException e)
-				{
-					s.setState(MapReduceStatus.STATE.FAILED);
-					if (debug)
-						log.info("RE Lost connection with: " + s + ": " + e.getMessage());
-				}
-				catch (NotBoundException e)
-				{
-					s.setState(MapReduceStatus.STATE.FAILED);
-					if (debug)
-						log.info("NB Lost connection with: " + s + ": " + e.getMessage());
-				}
+				checkup(s);
 			}
 		}
 	}
 
-	public List<Object> mapReduce(Object bo)
+	private void checkup(MapReduceStatus s)
+	{
+		if (!s.notOK())
+			return;
+		if (s.getState() == MapReduceStatus.STATE.OK)
+			return;
+		try
+		{
+			s.getInterface().ping();
+			s.setState(MapReduceStatus.STATE.OK);
+			if (debug)
+				log.info("Established connection to: " + s);
+		}
+		catch (RemoteException e)
+		{
+			s.setState(MapReduceStatus.STATE.FAILED);
+			if (debug)
+				log.info("RE Lost connection with: " + s + ": " + e.getMessage());
+		}
+		catch (NotBoundException e)
+		{
+			s.setState(MapReduceStatus.STATE.FAILED);
+			if (debug)
+				log.info("NB Lost connection with: " + s + ": " + e.getMessage());
+		}
+	}
+
+	public Object mapReduce(Object bo)
 	{
 		List<Object> map = map(bo);
 		EwList<Object> results = new EwList<Object>();
@@ -103,6 +95,8 @@ public class MapReduceClient
 			else
 				results.add(o);
 		}
+		if (results.size() == 1)
+			return results.get(0);
 		return results;
 	}
 
@@ -116,11 +110,16 @@ public class MapReduceClient
 		}
 		else
 		{
-			invokeCheckup();
 			LinkedHashMap<JobStatus, MapReduceStatus> job = new LinkedHashMap<JobStatus, MapReduceStatus>();
+
 			while (!jobsDone(job))
 			{
-				populateJob(job, o);
+				if (o instanceof JSONArray)
+					populateJobs(job, o);
+				else if (o instanceof List)
+					populateJobs(job, o);
+				else
+					populateJob(job, o);
 				distributeJobs(job);
 			}
 
@@ -129,14 +128,37 @@ public class MapReduceClient
 			{
 				results.add(j.getObject());
 			}
-			lastServiceMs = System.currentTimeMillis()-lastServiceMs;
+			lastServiceMs = System.currentTimeMillis() - lastServiceMs;
 			return results;
+		}
+	}
+
+	private void populateJob(LinkedHashMap<JobStatus, MapReduceStatus> job, Object o)
+	{
+		int i = 0;
+		while (job.size() == 0)
+		{
+			while (MapReduceStatus.getWorkload(peers.get(i % peers.size()).host) > 10 && peers.get(i % peers.size()).notOK())
+			{
+				i++;
+				if (i % peers.size() == 0)
+					EwThreading.sleep(100);
+			}
+			MapReduceStatus peer = peers.get(i % peers.size());
+			JobStatus j = new JobStatus();
+			j.setI(1);
+			j.setObject(o);
+			j.setMod(1);
+			j.setState(JobStatus.STATE.INCOMPLETE);
+			job.put(j, peer);
+			if (debug)
+				log.info("Rerouting: Assigning " + j + " to " + peer);
 		}
 	}
 
 	private void distributeJobs(LinkedHashMap<JobStatus, MapReduceStatus> job)
 	{
-		EwThreading.fork(new EwList<Entry<JobStatus, MapReduceStatus>>(job.entrySet()), new MyRunnable()
+		MyRunnable r = new MyRunnable()
 		{
 			public void run()
 			{
@@ -148,7 +170,15 @@ public class MapReduceClient
 					long ms = System.currentTimeMillis();
 					try
 					{
-						entry.getKey().setObject(entry.getValue().getInterface().go(entry.getKey()));
+						try
+						{
+							entry.getValue().incrementWorkload();
+							entry.getKey().setObject(entry.getValue().getInterface().go(entry.getKey()));
+						}
+						finally
+						{
+							entry.getValue().decrementWorkload();
+						}
 						if (entry.getKey().getObject() != null)
 							entry.getKey().setState(JobStatus.STATE.COMPLETE);
 						else
@@ -158,8 +188,7 @@ public class MapReduceClient
 						}
 						ms = System.currentTimeMillis() - ms;
 						if (debug)
-							log.info("Job " + entry.getKey() + " on " + entry.getValue() + " completed in " + ms
-									+ " ms");
+							log.info("Job " + entry.getKey() + " on " + entry.getValue() + " completed in " + ms + " ms");
 					}
 					catch (RemoteException e)
 					{
@@ -182,7 +211,14 @@ public class MapReduceClient
 					t.printStackTrace();
 				}
 			}
-		});
+		};
+		if (job.size() == 1)
+		{
+			r.o = new EwList<Entry<JobStatus, MapReduceStatus>>(job.entrySet()).get(0);
+			r.run();
+		}
+		else
+			EwThreading.fork(new EwList<Entry<JobStatus, MapReduceStatus>>(job.entrySet()), r);
 	}
 
 	private boolean jobsDone(LinkedHashMap<JobStatus, MapReduceStatus> job)
@@ -199,7 +235,7 @@ public class MapReduceClient
 		return true;
 	}
 
-	private void populateJob(LinkedHashMap<JobStatus, MapReduceStatus> job, Object o)
+	private void populateJobs(LinkedHashMap<JobStatus, MapReduceStatus> job, Object o)
 	{
 		int mod = peers.size();
 		List<Integer> absent = new EwList<Integer>();
@@ -244,8 +280,12 @@ public class MapReduceClient
 		int i = 0;
 		for (Integer absentI : absent)
 		{
-			while (peers.get(i % peers.size()).notOK())
+			while (MapReduceStatus.getWorkload(peers.get(i % peers.size()).host) > 10 && peers.get(i % peers.size()).notOK())
+			{
 				i++;
+				if (i % peers.size() == 0)
+					EwThreading.sleep(100);
+			}
 			MapReduceStatus peer = peers.get(i % peers.size());
 			JobStatus j = new JobStatus();
 			j.setI(absentI);

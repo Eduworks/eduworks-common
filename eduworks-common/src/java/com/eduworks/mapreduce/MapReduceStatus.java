@@ -4,27 +4,32 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 public class MapReduceStatus
 {
 	public enum STATE{OK,FAILED,IN_QUESTION};
 	
 	public MapReduceTransport transport = null;
-	private String	host;
+	String	host;
 	private String	name;
-	private STATE	state;
 	private int	I;
 	private short	port;
+
+	static ConcurrentHashMap<String, Integer> hostLoad = new ConcurrentHashMap<String, Integer>();
+	static ConcurrentHashMap<String, STATE> hostState = new ConcurrentHashMap<String, STATE>();
 	
 	@Override
 	public String toString()
 	{
-		return host + ":" + port + " #" + I + " " + state;
+		return host + ":" + port + " #" + I + " " + getState();
 	}
 	
 	public void setState(STATE state)
 	{
-		this.state = state;
+		hostState.putIfAbsent(host, STATE.IN_QUESTION);
+		hostState.put(host, state);
 	}
 	public void setI(int i)
 	{
@@ -32,11 +37,11 @@ public class MapReduceStatus
 	}
 	public STATE getState()
 	{
-		return state;
+		return hostState.get(host);
 	}
 	public boolean notOK()
 	{
-		return state != STATE.OK;
+		return getState() != STATE.OK;
 	}
 	public void setHost(String host,short port)
 	{
@@ -49,11 +54,44 @@ public class MapReduceStatus
 	}
 	public MapReduceTransport getInterface() throws RemoteException, NotBoundException
 	{
-		if (transport != null && state == STATE.OK)
+		if (transport != null && getState() == STATE.OK)
 			return transport;
         Registry registry = LocateRegistry.getRegistry(host,port);
         transport = (MapReduceTransport) registry.lookup(name);
         return transport;
+	}
+
+	public void incrementWorkload()
+	{
+		hostLoad.putIfAbsent(host, 0);
+		hostLoad.compute(host, new BiFunction<String, Integer, Integer>()
+		{
+			@Override
+			public Integer apply(String host, Integer load)
+			{
+				return load+1;
+			}
+		});
+	}
+
+	public void decrementWorkload()
+	{
+		hostLoad.putIfAbsent(host, 0);
+		hostLoad.compute(host, new BiFunction<String, Integer, Integer>()
+		{
+			@Override
+			public Integer apply(String host, Integer load)
+			{
+				return load-1;
+			}
+		});
+	}
+	public static Integer getWorkload(String host)
+	{
+		Integer integer = hostLoad.get(host);
+		if (integer == null)
+			return 0;
+		return integer;
 	}
 
 }
