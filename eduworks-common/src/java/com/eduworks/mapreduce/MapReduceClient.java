@@ -59,8 +59,8 @@ public class MapReduceClient
 
 	private void checkup(MapReduceStatus s)
 	{
-		if (!s.notOK())
-			return;
+//		if (!s.notOK())
+//			return;
 		if (s.getState() == MapReduceStatus.STATE.OK)
 			return;
 		try
@@ -136,10 +136,14 @@ public class MapReduceClient
 	private void populateJob(LinkedHashMap<JobStatus, MapReduceStatus> job, Object o)
 	{
 		int i = 0;
+
+		job.clear();
 		while (job.size() == 0)
 		{
-			while (MapReduceStatus.getWorkload(peers.get(i % peers.size()).host) > 10 && peers.get(i % peers.size()).notOK())
+			while (MapReduceStatus.getWorkload(peers.get(i % peers.size()).host) > 10 || peers.get(i % peers.size()).notOK())
 			{
+				if (i > peers.size())
+					checkup(peers.get(i % peers.size()));
 				i++;
 				if (i % peers.size() == 0)
 					EwThreading.sleep(100);
