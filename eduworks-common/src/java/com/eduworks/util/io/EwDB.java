@@ -43,7 +43,34 @@ public class EwDB
 		lsh.handles.incrementAndGet();
 		return lsh;
 	}
+	
+	public void commit() {
+		db.commit();
+	}
 
+	public static synchronized EwDB getCompressed(String _baseDirectory, String _databaseName)
+	{
+		String cacheKey = _baseDirectory + " " + _databaseName;
+
+		EwDB lsh = null;
+		lsh = (EwDB) cache.get(cacheKey);
+		if (lsh != null)
+		{
+			synchronized(lsh.handles)
+			{
+				lsh.handles.incrementAndGet();
+			}
+			return lsh;
+		}
+		lsh = new EwDB();
+		new File(_baseDirectory).mkdirs();
+		new File(_baseDirectory).mkdir();
+		lsh.db = DBMaker.newFileDB(new File(_baseDirectory, _databaseName)).cacheSoftRefEnable().compressionEnable().closeOnJvmShutdown().make();
+		cache.put(cacheKey, lsh);
+		lsh.handles.incrementAndGet();
+		return lsh;
+	}
+	
     protected final ReentrantReadWriteLock commitLock = new ReentrantReadWriteLock();
 	public boolean	compact = false;
 	public AtomicInteger writeCount = new AtomicInteger(0);
