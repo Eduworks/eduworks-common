@@ -55,6 +55,7 @@ public class EwDB
 			System.out.println(e.getMessage());
 			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
 				upgradeDatabase(dbLocation, false);
+				lsh.db = DBMaker.newFileDB(dbLocation).cacheSoftRefEnable().closeOnJvmShutdown().make();
 			}
 		}
 		cache.put(cacheKey, lsh);
@@ -66,11 +67,13 @@ public class EwDB
 		try {
 			System.out.println("found old db format, upgrading");
 			final DB db;
-			File newF = new File(f.getAbsolutePath()+"+");
+			File targetF = new File(f.getAbsolutePath());
+			File newF = new File(f.getAbsolutePath()+"Old");
+			f.renameTo(newF);
 			if (!compression)
-				db = DBMaker.newFileDB(newF).cacheSoftRefEnable().closeOnJvmShutdown().make();
+				db = DBMaker.newFileDB(targetF).cacheSoftRefEnable().closeOnJvmShutdown().make();
 			else
-				db = DBMaker.newFileDB(newF).cacheSoftRefEnable().compressionEnable().closeOnJvmShutdown().make();
+				db = DBMaker.newFileDB(targetF).cacheSoftRefEnable().compressionEnable().closeOnJvmShutdown().make();
 			
 			LogOutputStream los = new LogOutputStream() {
 				boolean hMap = false;
@@ -200,6 +203,7 @@ public class EwDB
 			System.out.println(e.getMessage());
 			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
 				upgradeDatabase(dbLocation, true);
+				lsh.db = DBMaker.newFileDB(dbLocation).compressionEnable().cacheSoftRefEnable().closeOnJvmShutdown().make();
 			}
 		}
 		cache.put(cacheKey, lsh);
