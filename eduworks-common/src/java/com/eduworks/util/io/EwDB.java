@@ -165,7 +165,7 @@ public class EwDB
 				}
 			};
 			PumpStreamHandler psh = new PumpStreamHandler(los);
-			CommandLine cl = CommandLine.parse("java -jar " + EwFileSystem.findFile("external/exportDB.jar",EwDB.class,true,false).getAbsolutePath() + " " + f.getAbsolutePath());
+			CommandLine cl = CommandLine.parse("java -jar " + EwFileSystem.findFile("exportDB.jar",EwDB.class,true,false).getAbsolutePath() + " " + f.getAbsolutePath());
 			DefaultExecutor exec = new DefaultExecutor();
 			exec.setStreamHandler(psh);
 			exec.execute(cl);
