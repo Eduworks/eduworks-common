@@ -70,6 +70,12 @@ public class EwDB
 			File targetF = new File(f.getAbsolutePath());
 			File newF = new File(f.getAbsolutePath()+"Old");
 			f.renameTo(newF);
+			f = new File(f.getAbsolutePath()+".p");
+			newF = new File(f.getAbsolutePath()+"Old.p");
+			f.renameTo(newF);
+			f = new File(f.getAbsolutePath()+".t");
+			newF = new File(f.getAbsolutePath()+"Old.t");
+			f.renameTo(newF);
 			if (!compression)
 				db = DBMaker.newFileDB(targetF).cacheSoftRefEnable().closeOnJvmShutdown().make();
 			else
