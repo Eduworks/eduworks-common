@@ -70,11 +70,11 @@ public class EwDB
 			File targetF = new File(f.getAbsolutePath());
 			File newF = new File(f.getAbsolutePath()+"Old");
 			f.renameTo(newF);
-			f = new File(f.getAbsolutePath()+".p");
-			newF = new File(f.getAbsolutePath()+"Old.p");
+			f = new File(targetF.getAbsolutePath()+".p");
+			newF = new File(targetF.getAbsolutePath()+"Old.p");
 			f.renameTo(newF);
-			f = new File(f.getAbsolutePath()+".t");
-			newF = new File(f.getAbsolutePath()+"Old.t");
+			f = new File(targetF.getAbsolutePath()+".t");
+			newF = new File(targetF.getAbsolutePath()+"Old.t");
 			f.renameTo(newF);
 			if (!compression)
 				db = DBMaker.newFileDB(targetF).cacheSoftRefEnable().closeOnJvmShutdown().make();
@@ -165,7 +165,7 @@ public class EwDB
 				}
 			};
 			PumpStreamHandler psh = new PumpStreamHandler(los);
-			CommandLine cl = CommandLine.parse("java -jar " + EwFileSystem.findFile("lib/exportDB.jar",EwDB.class,true,false).getAbsolutePath() + " " + f.getAbsolutePath());
+			CommandLine cl = CommandLine.parse("java -jar " + EwFileSystem.findFile("com/eduworks/util/io/exportDB.jar",EwDB.class,true,false).getAbsolutePath() + " " + f.getAbsolutePath());
 			DefaultExecutor exec = new DefaultExecutor();
 			exec.setStreamHandler(psh);
 			exec.execute(cl);
