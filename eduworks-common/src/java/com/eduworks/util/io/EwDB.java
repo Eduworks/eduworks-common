@@ -1,14 +1,24 @@
 package com.eduworks.util.io;
 
 import java.io.File;
+import java.io.IOError;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteException;
+import org.apache.commons.exec.LogOutputStream;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.Fun.Tuple2;
+import org.mapdb.HTreeMap;
 
 import com.eduworks.lang.threading.EwThreading;
 import com.eduworks.lang.threading.EwThreading.MyRunnable;
@@ -26,7 +36,7 @@ public class EwDB
 		String cacheKey = _baseDirectory + " " + _databaseName;
 
 		EwDB lsh = null;
-		lsh = (EwDB) cache.get(cacheKey);
+		lsh = cache.get(cacheKey);
 		if (lsh != null)
 		{
 			synchronized(lsh.handles)
@@ -38,10 +48,128 @@ public class EwDB
 		lsh = new EwDB();
 		new File(_baseDirectory).mkdirs();
 		new File(_baseDirectory).mkdir();
-		lsh.db = DBMaker.newFileDB(new File(_baseDirectory, _databaseName)).cacheSoftRefEnable().closeOnJvmShutdown().make();
+		File dbLocation = new File(_baseDirectory, _databaseName);
+		try {
+			lsh.db = DBMaker.newFileDB(dbLocation).cacheSoftRefEnable().closeOnJvmShutdown().make();
+		} catch (IOError e) {
+			System.out.println(e.getMessage());
+			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
+				upgradeDatabase(dbLocation, false);
+			}
+		}
 		cache.put(cacheKey, lsh);
 		lsh.handles.incrementAndGet();
 		return lsh;
+	}
+	
+	private static void upgradeDatabase(File f, boolean compression) {
+		try {
+			System.out.println("found old db format, upgrading");
+			final DB db;
+			File newF = new File(f.getAbsolutePath()+"+");
+			if (!compression)
+				db = DBMaker.newFileDB(newF).cacheSoftRefEnable().closeOnJvmShutdown().make();
+			else
+				db = DBMaker.newFileDB(newF).cacheSoftRefEnable().compressionEnable().closeOnJvmShutdown().make();
+			
+			LogOutputStream los = new LogOutputStream() {
+				boolean hMap = false;
+				boolean bMap = false;
+				boolean atomic = false;
+				org.mapdb.Atomic.Integer idCounter = null;
+				HTreeMap hm = null;
+				NavigableSet<Tuple2<String, String>> bm = null;
+				Object key = null;
+				Object value = null;
+				
+				@Override
+				protected void processLine(String line, int logLevel) {
+
+					if (hMap) {
+						if (hm==null)
+							hm = db.getHashMap(line);
+						else {
+							if (key!=null&&value!=null) {
+								hm.put(key, value);
+								key = null;
+								value = null;
+							}
+							
+							if (key==null)
+								key = line;
+							else if (value==null)
+								value = line;
+						}
+					} else if (bMap) {
+						if (bm==null)
+							bm = db.getTreeSet(line);
+						else {
+							if (key!=null&&value!=null) {
+								bm.add(new Tuple2(key, value));
+								key = null;
+								value = null;
+							}
+							
+							if (key==null)
+								key = line;
+							else if (value==null)
+								value = line;
+						}
+					} else if (atomic) {
+						if (idCounter==null)
+							idCounter = db.getAtomicInteger(line);
+						else {
+							if (key!=null) {
+								idCounter.set(Integer.parseInt(key.toString()));
+								key = null;
+							}
+							
+							if (key==null)
+								key = line;
+						}
+					}
+					
+					if (line.equals("S-HTreeMap"))
+						hMap = true;
+					else if (line.equals("E-HTreeMap")) {
+						hMap = false;
+						hm = null;
+						key = null;
+						value = null;
+					} else if (line.equals("S-BTreeMap"))
+						bMap = true;
+					else if (line.equals("E-BTreeMap")) {
+						bMap = false;
+						bm = null;
+						key = null;
+						value = null;
+					} else if (line.equals("S-AtomicInteger"))
+						atomic = true;
+					else if (line.equals("E-AtomicInteger")) {
+						atomic = false;
+						idCounter = null;
+						key = null;
+						value = null;
+					}
+									
+					System.out.println(line);
+				}
+			};
+			PumpStreamHandler psh = new PumpStreamHandler(los);
+			CommandLine cl = CommandLine.parse("java -jar Q:/repo/workspaceJava/eduworks-common/lib/exportDB.jar " + f.getAbsolutePath());
+			DefaultExecutor exec = new DefaultExecutor();
+			exec.setStreamHandler(psh);
+			exec.execute(cl);
+			db.commit();
+		} catch (SecurityException e1) {
+			e1.printStackTrace();
+		} catch (IllegalArgumentException e1) {
+			e1.printStackTrace();
+		} catch (ExecuteException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 	}
 	
 	public void commit() {
@@ -65,7 +193,15 @@ public class EwDB
 		lsh = new EwDB();
 		new File(_baseDirectory).mkdirs();
 		new File(_baseDirectory).mkdir();
-		lsh.db = DBMaker.newFileDB(new File(_baseDirectory, _databaseName)).cacheSoftRefEnable().compressionEnable().closeOnJvmShutdown().make();
+		File dbLocation = new File(_baseDirectory, _databaseName);
+		try {
+			lsh.db = DBMaker.newFileDB(dbLocation).compressionEnable().cacheSoftRefEnable().closeOnJvmShutdown().make();
+		} catch (IOError e) {
+			System.out.println(e.getMessage());
+			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
+				upgradeDatabase(dbLocation, true);
+			}
+		}
 		cache.put(cacheKey, lsh);
 		lsh.handles.incrementAndGet();
 		return lsh;
