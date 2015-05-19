@@ -65,7 +65,7 @@ public class EwDB
 	
 	private static void upgradeDatabase(File f, boolean compression) {
 		try {
-			System.out.println("found old db format, upgrading");
+			System.out.println("found old db format, upgrading - ");
 			final DB db;
 			File targetF = new File(f.getAbsolutePath());
 			File newF = new File(f.getAbsolutePath()+"Old");

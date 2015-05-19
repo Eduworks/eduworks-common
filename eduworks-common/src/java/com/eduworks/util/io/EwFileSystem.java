@@ -11,7 +11,9 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.Collection;
@@ -244,7 +246,7 @@ public class EwFileSystem
 
 		return targetPath;
 	}
-
+	
 	public static File findFile(String estimatedPath, Class<? extends Object> inThisClassJar, boolean permanantFile, boolean isWebResource) throws IOException
 	{
 		String rootPath = null;
