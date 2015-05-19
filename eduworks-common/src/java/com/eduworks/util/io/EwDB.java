@@ -161,8 +161,6 @@ public class EwDB
 						key = null;
 						value = null;
 					}
-									
-				//	System.out.println(line);
 				}
 			};
 			
@@ -183,15 +181,6 @@ public class EwDB
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		} 
-//		catch (NoSuchMethodException e) {
-//			e.printStackTrace();
-//		} catch (ClassNotFoundException e) {
-//			e.printStackTrace();
-//		} catch (IllegalAccessException e) {
-//			e.printStackTrace();
-//		} catch (InvocationTargetException e) {
-//			e.printStackTrace();
-//		}
 	}
 	
 	public void commit() {
