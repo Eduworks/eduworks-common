@@ -297,6 +297,8 @@ public class EwFileSystem
 		if (possibleFile == null)
 			throw new IOException("Could not find file: " + estimatedPath);
 
+		System.out.println(possibleFile);
+		
 		if (possibleInputStream != null)
 		{
 			if (targetPath.exists() == false)

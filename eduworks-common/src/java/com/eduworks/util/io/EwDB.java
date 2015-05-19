@@ -68,7 +68,8 @@ public class EwDB
 			System.out.println("found old db format, upgrading - ");
 			final DB db;
 			File targetF = new File(f.getAbsolutePath());
-			File newF = new File(f.getAbsolutePath()+"Old");
+			File oldTarget = new File(f.getAbsolutePath()+"Old");
+			File newF = new File(oldTarget.getAbsolutePath());
 			f.renameTo(newF);
 			f = new File(targetF.getAbsolutePath()+".p");
 			newF = new File(targetF.getAbsolutePath()+"Old.p");
@@ -161,14 +162,17 @@ public class EwDB
 						value = null;
 					}
 									
-					System.out.println(line);
+				//	System.out.println(line);
 				}
 			};
+			
+			String path = EwFileSystem.findFile("exportDB.jar", EwDB.class, true, false).getAbsolutePath();
+
 			PumpStreamHandler psh = new PumpStreamHandler(los);
-			CommandLine cl = CommandLine.parse("java -jar " + EwFileSystem.findFile("exportDB.jar",EwDB.class,true,false).getAbsolutePath() + " " + f.getAbsolutePath());
+			CommandLine cl = CommandLine.parse("java -cp " + path + " -jar " + path + " " + oldTarget.getAbsolutePath());
 			DefaultExecutor exec = new DefaultExecutor();
 			exec.setStreamHandler(psh);
-			exec.execute(cl);
+			exec.execute(cl);	
 			db.commit();
 		} catch (SecurityException e1) {
 			e1.printStackTrace();
@@ -178,7 +182,16 @@ public class EwDB
 			e1.printStackTrace();
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		}
+		} 
+//		catch (NoSuchMethodException e) {
+//			e.printStackTrace();
+//		} catch (ClassNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IllegalAccessException e) {
+//			e.printStackTrace();
+//		} catch (InvocationTargetException e) {
+//			e.printStackTrace();
+//		}
 	}
 	
 	public void commit() {
