@@ -30,7 +30,7 @@ public class EwDB
 	public Future<?>   tCleose = null;
 	public AtomicInteger		handles = new AtomicInteger(0);
 	static Map<String,EwDB> cache = new HashMap<String,EwDB>();
-
+	
 	public static synchronized EwDB get(String _baseDirectory, String _databaseName)
 	{
 		String cacheKey = _baseDirectory + " " + _databaseName;
