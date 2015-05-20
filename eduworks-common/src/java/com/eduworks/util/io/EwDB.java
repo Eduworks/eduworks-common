@@ -50,20 +50,51 @@ public class EwDB
 		new File(_baseDirectory).mkdir();
 		File dbLocation = new File(_baseDirectory, _databaseName);
 		try {
-			lsh.db = DBMaker.newFileDB(dbLocation).cacheSoftRefEnable().closeOnJvmShutdown().make();
+			lsh.db = DBMaker.newFileDB(dbLocation).closeOnJvmShutdown().make();
 		} catch (IOError e) {
 			System.out.println(e.getMessage());
 			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
 				upgradeDatabase(dbLocation, false);
-				lsh.db = DBMaker.newFileDB(dbLocation).cacheSoftRefEnable().closeOnJvmShutdown().make();
+				lsh.db = DBMaker.newFileDB(dbLocation).closeOnJvmShutdown().make();
 			}
 		}
 		cache.put(cacheKey, lsh);
 		lsh.handles.incrementAndGet();
 		return lsh;
 	}
-	
-	private static void upgradeDatabase(File f, boolean compression) {
+
+	public static synchronized EwDB getNoTransaction(String _baseDirectory, String _databaseName)
+	{
+		String cacheKey = _baseDirectory + " " + _databaseName;
+
+		EwDB lsh = null;
+		lsh = cache.get(cacheKey);
+		if (lsh != null)
+		{
+			synchronized(lsh.handles)
+			{
+				lsh.handles.incrementAndGet();
+			}
+			return lsh;
+		}
+		lsh = new EwDB();
+		new File(_baseDirectory).mkdirs();
+		new File(_baseDirectory).mkdir();
+		File dbLocation = new File(_baseDirectory, _databaseName);
+		try {
+			lsh.db = DBMaker.newFileDB(dbLocation).transactionDisable().closeOnJvmShutdown().make();
+		} catch (IOError e) {
+			System.out.println(e.getMessage());
+			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
+				upgradeDatabase(dbLocation, false);
+				lsh.db = DBMaker.newFileDB(dbLocation).transactionDisable().closeOnJvmShutdown().make();
+			}
+		}
+		cache.put(cacheKey, lsh);
+		lsh.handles.incrementAndGet();
+		return lsh;
+	}
+	private static synchronized void upgradeDatabase(File f, boolean compression) {
 		try {
 			System.out.println("found old db format, upgrading - ");
 			final DB db;
@@ -78,9 +109,9 @@ public class EwDB
 			newF = new File(targetF.getAbsolutePath()+"Old.t");
 			f.renameTo(newF);
 			if (!compression)
-				db = DBMaker.newFileDB(targetF).cacheSoftRefEnable().closeOnJvmShutdown().make();
+				db = DBMaker.newFileDB(targetF).transactionDisable().asyncWriteEnable().closeOnJvmShutdown().make();
 			else
-				db = DBMaker.newFileDB(targetF).cacheSoftRefEnable().compressionEnable().closeOnJvmShutdown().make();
+				db = DBMaker.newFileDB(targetF).transactionDisable().asyncWriteEnable().compressionEnable().closeOnJvmShutdown().make();
 			
 			LogOutputStream los = new LogOutputStream() {
 				boolean hMap = false;
@@ -189,7 +220,7 @@ public class EwDB
 
 	public static synchronized EwDB getCompressed(String _baseDirectory, String _databaseName)
 	{
-		String cacheKey = _baseDirectory + " " + _databaseName;
+		String cacheKey = _baseDirectory + " " + _databaseName+"Compressed";
 
 		EwDB lsh = null;
 		lsh = (EwDB) cache.get(cacheKey);
@@ -206,12 +237,12 @@ public class EwDB
 		new File(_baseDirectory).mkdir();
 		File dbLocation = new File(_baseDirectory, _databaseName);
 		try {
-			lsh.db = DBMaker.newFileDB(dbLocation).compressionEnable().cacheSoftRefEnable().closeOnJvmShutdown().make();
+			lsh.db = DBMaker.newFileDB(dbLocation).compressionEnable().closeOnJvmShutdown().make();
 		} catch (IOError e) {
 			System.out.println(e.getMessage());
 			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
 				upgradeDatabase(dbLocation, true);
-				lsh.db = DBMaker.newFileDB(dbLocation).compressionEnable().cacheSoftRefEnable().closeOnJvmShutdown().make();
+				lsh.db = DBMaker.newFileDB(dbLocation).compressionEnable().closeOnJvmShutdown().make();
 			}
 		}
 		cache.put(cacheKey, lsh);

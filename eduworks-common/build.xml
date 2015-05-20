@@ -164,6 +164,7 @@
 				<include name="**/*.gz" />
 				<include name="**/*.ccf" />
 				<include name="**/*.version" />
+				<include name="**/*.jar" />
 				<include name="**/*.dta" />
 				<include name="**/*.dat" />
 				<include name="**/*.properties" />
