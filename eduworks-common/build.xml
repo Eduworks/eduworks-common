@@ -18,7 +18,6 @@
 	<property name="eduworks.common.lib.dir" value="../eduworks-common/lib" />
 	<property name="eduworks.common.name" value="eduworks-common" />
 	<property name="eduworks.common.dist" value="../eduworks-common/dist" />
-	<property name="eduworks.common.external" value="../eduworks-common/external" />
 	
 	<macrodef name="echo-path">
 		<attribute name="pathref" />
@@ -143,9 +142,6 @@
 		<pathtofileset name="foo" dir=".." pathrefid="cp"/>
 		<copy todir="${eduworks.common.lib.dir}/eduworks">
 			<fileset refid="foo"/>
-		</copy>
-		<copy todir="${eduworks.common.build.dir}">
-			<fileset dir="${eduworks.common.external}"/>
 		</copy>
 	</target>
 
