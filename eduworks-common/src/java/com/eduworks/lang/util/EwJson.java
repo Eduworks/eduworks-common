@@ -752,6 +752,7 @@ public class EwJson
 	public static JSONArray getJsonArray(String json)
 	{
 		if (!isNull(json))
+			if (json.trim().startsWith("["))
 			try {
 				return EwJsonArray.parse(json);
 			} catch (JSONException je) {
@@ -764,6 +765,7 @@ public class EwJson
 	public static JSONObject getJsonObject(String json)
 	{
 		if (!isNull(json))
+			if (json.trim().startsWith("{"))
 			try {
 				return EwJsonObject.parse(json);
 			} catch (JSONException je) {

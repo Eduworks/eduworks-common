@@ -34,7 +34,11 @@ public class InMemoryFile
 	{
 		try
 		{
-			File f = File.createTempFile("foo", name);
+			File f = null;
+			if (name == null)
+				f=File.createTempFile("foo", "unk");
+			else
+				f=File.createTempFile("foo", name);
 			FileUtils.writeByteArrayToFile(f, data);
 			return f;
 		}
