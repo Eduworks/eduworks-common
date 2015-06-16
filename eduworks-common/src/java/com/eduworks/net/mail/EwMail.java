@@ -72,7 +72,6 @@ public final class EwMail
 		properties.setProperty("mail.smtp.host", smtpHost);
 		properties.setProperty("mail.smtp.port", smtpPort);
 		properties.setProperty("mail.smtp.user", smtpUser);
-		properties.setProperty("mail.smtp.ssl.enable", Boolean.TRUE.toString());
 		properties.setProperty("mail.smtp.timeout", "20000");
 		properties.setProperty("mail.smtp.starttls.enable", Boolean.TRUE.toString());
 
