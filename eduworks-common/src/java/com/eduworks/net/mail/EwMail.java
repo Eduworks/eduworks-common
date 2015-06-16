@@ -61,7 +61,7 @@ public final class EwMail
 		}
 	}
 
-	private static Session getSession(String smtpHost,String smtpUser,String smtpPass)
+	private static Session getSession(String smtpHost,String smtpPort,String smtpUser,String smtpPass)
 	{
 		Authenticator authenticator = new Authenticator(smtpUser,smtpPass);
 
@@ -70,7 +70,7 @@ public final class EwMail
 		properties.setProperty("mail.smtp.auth", Boolean.TRUE.toString());
 
 		properties.setProperty("mail.smtp.host", smtpHost);
-		properties.setProperty("mail.smtp.port", "587");
+		properties.setProperty("mail.smtp.port", smtpPort);
 		properties.setProperty("mail.smtp.user", smtpUser);
 		properties.setProperty("mail.smtp.ssl.enable", Boolean.TRUE.toString());
 		properties.setProperty("mail.smtp.timeout", "20000");
@@ -84,12 +84,12 @@ public final class EwMail
 	 * @throws MessagingException
 	 * @throws AddressException
 	 */
-	public static void sendEmail(String smtpHost,String smtpUser,String smtpPass,String aFromEmailAddr, String aToEmailAddr, String aSubject, String aBody) throws AddressException, MessagingException
+	public static void sendEmail(String smtpHost,String smtpPort,String smtpUser,String smtpPass,String aFromEmailAddr, String aToEmailAddr, String aSubject, String aBody) throws AddressException, MessagingException
 	{
 		// Here, no Authenticator argument is used (it is null).
 		// Authenticators are used to prompt the user for user
 		// name and password.
-		Session session = getSession(smtpHost,smtpUser,smtpPass);
+		Session session = getSession(smtpHost,smtpPort,smtpUser,smtpPass);
 		MimeMessage message = new MimeMessage(session);
 
 		message.setFrom(new InternetAddress(aFromEmailAddr));
@@ -106,12 +106,12 @@ public final class EwMail
 	 * @throws MessagingException
 	 * @throws AddressException
 	 */
-	public static void sendHtmlEmail(String smtpHost,String smtpUser,String smtpPass,String aFromEmailAddr, String aToEmailAddr, String aSubject, String aBody) throws AddressException, MessagingException
+	public static void sendHtmlEmail(String smtpHost,String smtpPort,String smtpUser,String smtpPass,String aFromEmailAddr, String aToEmailAddr, String aSubject, String aBody) throws AddressException, MessagingException
 	{
 		// Here, no Authenticator argument is used (it is null).
 		// Authenticators are used to prompt the user for user
 		// name and password.
-		Session session = getSession(smtpHost,smtpUser,smtpPass);
+		Session session = getSession(smtpHost,smtpPort,smtpUser,smtpPass);
 		MimeMessage message = new MimeMessage(session);
 
 		message.setFrom(new InternetAddress(aFromEmailAddr));
