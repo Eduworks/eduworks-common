@@ -18,6 +18,8 @@ public class EwCache<K, V>
 	}
 	public static synchronized EwCache<Object, Object> getCache(String name,int count)
 	{
+		if (!cache)
+			return null;
 		SoftReference<EwCache<Object, Object>> cache = caches.get(name);
 		EwCache<Object, Object> cacheActual;
 		if (cache != null)
