@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -213,12 +214,12 @@ public class EwThreading
 		placeToAdd.add(fork(forkSlowly, r, Integer.MAX_VALUE));
 	}
 
-	public static void forkAccm(MyFutureList placeToAdd, boolean forkSlowly, MyRunnable r,int forkLimit)
+	public static void forkAccm(MyFutureList placeToAdd, boolean forkSlowly, MyRunnable r, int forkLimit)
 	{
 		placeToAdd.add(fork(forkSlowly, r, forkLimit));
 		if (forkSlowly && placeToAdd.list.size() % 10000 == 0)
 			log.info("So far " + placeToAdd.list.size());
-		
+
 	}
 
 	public static void fork(int min, int lessthan, MyRunnable r)
@@ -283,6 +284,7 @@ public class EwThreading
 		private static final long serialVersionUID = -8460295382838816873L;
 		long ms = System.currentTimeMillis();
 		long zero = System.currentTimeMillis();
+		long count = 0;
 
 		List<Future<?>> list = Collections.synchronizedList(new EwList<Future<?>>());
 
@@ -294,6 +296,7 @@ public class EwThreading
 		public void add(Future<?> fork)
 		{
 			list.add(fork);
+			count++;
 		}
 
 		public void nowPause(boolean report)
@@ -302,7 +305,7 @@ public class EwThreading
 			Date reportNext = new Date();
 			while (true)
 			{
-				if (list.size() == 0)
+				if (count == 0)
 					return;
 				try
 				{
@@ -318,7 +321,7 @@ public class EwThreading
 				}
 				boolean go_on = true;
 				int i = 0;
-				for (Future<?> f : list)
+				for (Future f : list)
 					if (f.isDone() == false)
 					{
 						go_on = false;
@@ -331,9 +334,9 @@ public class EwThreading
 				if (report && reportNext.before(d))
 				{
 					long current = System.currentTimeMillis();
-					long future = (long) ((((((double) list.size()) / ((double) (list.size() - i))) - 1.0) * (current - zero)) + current);
+					long future = (long) ((((((double) count) / ((double) (count - i))) - 1.0) * (current - zero)) + current);
 					String stuff = "Started: " + new Date(zero).toString() + " Estd Done: " + new Date(future).toString();
-					log.info("So far " + (list.size() - i) + "/" + list.size() + "(" + ((double) (list.size() - i)) / ((double) list.size()) + ") " + stuff);
+					log.info("So far " + (count - i) + "/" + count + "(" + ((double) (count - i)) / ((double) count) + ") " + stuff);
 					// long duration = System.currentTimeMillis() - ms;
 					// double perSecond = (double) (list.size() - i) / ((double)
 					// duration / 1000.0);
