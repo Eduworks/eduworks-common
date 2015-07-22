@@ -12,6 +12,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import org.apache.log4j.Logger;
 
@@ -106,7 +107,7 @@ public class EwThreading
 			return getTps();
 		log.info("Using " + threads + " number of threads.");
 		while (tpses.size() - 1 < getThreadLevel())
-			tpses.add(new ThreadPoolExecutor(threads, threads, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
+			tpses.add(new ThreadPoolExecutor(threads, threads, 60L, TimeUnit.SECONDS, new ConcurrentBlockingQueue<Runnable>()));
 		int level = tpses.size() - 1;
 		try
 		{

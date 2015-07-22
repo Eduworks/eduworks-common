@@ -147,7 +147,7 @@ public class EwNumerics
 	public static Tuple<Double, Double> maxGap(Collection<Double> values)
 	{
 		EwList<Double> intermediate = new EwList<Double>(values);
-		intermediate.sort(intermediate);
+		EwList.sort(intermediate);
 		Map<Double,Tuple<Double,Double>> gapRegistry = new HashMap<Double,Tuple<Double,Double>>();
 		Double maxGap = new Double(Integer.MIN_VALUE);
 		Double oldD = null;
