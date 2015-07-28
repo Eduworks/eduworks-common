@@ -21,7 +21,7 @@
 	<dependency org="commons-codec" name="commons-codec" rev="1.6"/>
 	<dependency org="org.apache.commons" name="commons-math" rev="2.0"/>
 	<dependency org="net.sourceforge.collections" name="collections-generic" rev="4.01"/>
-	<dependency org="org.mapdb" name="mapdb" rev="1.0.7"/>
+	<dependency org="org.mapdb" name="mapdb" rev="1.0.8"/>
     <dependency org="org.reflections" name="reflections" rev="0.9.9"/>
     <dependency org="org.apache.commons" name="commons-exec" rev="1.3"/>
 	
