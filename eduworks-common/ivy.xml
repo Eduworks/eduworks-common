@@ -51,6 +51,7 @@
 	<!-- Broken dependencies -->
 	<exclude org="*velocity"/>
 	<exclude org="velocity"/>
+	<exclude org="org.eclipse.jetty"/>
 	<exclude module="slf4j-log4j12"/>
 	<exclude module="slf4j-simple"/>
 	<exclude org="javax.sql"/>
