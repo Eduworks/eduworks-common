@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EwCache<K, V>
 {
@@ -32,27 +33,23 @@ public class EwCache<K, V>
 
 	private static final float	hashTableLoadFactor	= 0.75f;
 
-	private LinkedHashMap<K, V>	map;
+	private ConcurrentHashMap<K, V>	map;
 	private int					cacheSize;
 
 	public EwCache(int cacheSize)
 	{
 		this.cacheSize = cacheSize;
 		int hashTableCapacity = (int) Math.ceil(cacheSize / hashTableLoadFactor) + 1;
-		map = new LinkedHashMap<K, V>(hashTableCapacity, hashTableLoadFactor, true)
+		map = new ConcurrentHashMap<K, V>(hashTableCapacity, hashTableLoadFactor)
 		{
 			private static final long	serialVersionUID	= 1;
 
-			@Override
-			protected boolean removeEldestEntry(Map.Entry<K, V> eldest)
-			{
-				return size() > EwCache.this.cacheSize;
-			}
 		};
 	}
 
 	public synchronized V get(K key)
 	{
+		if (key == null) return null;
 		return map.get(key);
 	}
 
