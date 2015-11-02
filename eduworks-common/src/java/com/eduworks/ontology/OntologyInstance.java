@@ -606,22 +606,43 @@ public class OntologyInstance extends OntologyWrapper {
 	public JSONObject getJSONRepresentation(){
 		return getJSONRepresentation(false);
 	}
-	public JSONObject getJSONRepresentation(boolean local) {
+	public JSONObject getJSONRepresentation(boolean local){
+		return getJSONRepresentation(local, true);
+	}
+	@SuppressWarnings("unused")
+	public JSONObject getJSONRepresentation(boolean local, boolean inference) {
 		JSONObject instanceObj = new JSONObject();
 
-		// TODO: Change to Reasoner!
+		// TODO: May want to change to Reasoner!
+		
+		OntModel explicitModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM_RULE_INF, ont.getJenaModel().getBaseModel());
+		OntModel noInferModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, ont.getJenaModel().getBaseModel());
+		
 		// Get Object Properties and Values associated with and add to instance Object
-		
-		OntModel explicitModel = null;
-		if(local){
-			explicitModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM, ont.getJenaModel().getBaseModel());
-		}
-		
 		Set<String> objectPropIdList = ont.getObjectPropertyIdList();
 		Set<String> dataPropIdList = ont.getDataPropertyIdList();
 		
 		for(Statement stmt : jenaInstance.listProperties().toSet()){
-			if(!local || explicitModel.contains(stmt)){
+			
+			OntProperty prop = ont.getJenaModel().getOntProperty(stmt.getPredicate().getURI());
+			boolean isInferredInverse = false;
+			
+			if(prop.getInverse() != null){
+				Resource r = stmt.getObject().asResource();
+				Property p = prop.getInverse();
+				Resource s = stmt.getSubject();
+				isInferredInverse = noInferModel.contains(r, p, s);
+			}
+			
+			// TODO: Probably want to consider if local == true && inference == false
+			if( (!local && inference) ||
+					(inference && explicitModel.contains(stmt)) ||
+					(!inference && 
+							( noInferModel.contains(stmt) || 
+									(prop!= null && isInferredInverse || prop.isSymmetricProperty())
+							)
+					)
+				){
 				
 			
 				Property p = stmt.getPredicate();
