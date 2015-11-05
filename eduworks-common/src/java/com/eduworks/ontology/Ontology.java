@@ -175,6 +175,8 @@ public class Ontology extends OntologyWrapper
 			throw new RuntimeException("Ontology Identifier cannot be empty");
 		}
 
+		OntDocumentManager.getInstance().clearCache();
+		
 		// TODO: Probably want to use a real URL Validator here
 		if(!identifier.startsWith("http")){
 			if (defaultURI.endsWith("/"))
