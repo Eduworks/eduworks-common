@@ -6,6 +6,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
@@ -220,7 +221,6 @@ public class EwThreading
 		placeToAdd.add(fork(forkSlowly, r, forkLimit));
 		if (forkSlowly && placeToAdd.list.size() % 10000 == 0)
 			log.info("So far " + placeToAdd.list.size());
-
 	}
 
 	public static void fork(int min, int lessthan, MyRunnable r)
@@ -249,8 +249,7 @@ public class EwThreading
 				while (getTaskCount(getThreadLevel()) > threads || getTaskCount(getThreadLevel()) >= forkLimit)
 					EwThreading.sleep(10);
 			final int nextLevel = getThreadLevel() + 1;
-			MyRunnable run;
-			Future<?> submit = tps.submit(run = new MyRunnable()
+			MyRunnable run = new MyRunnable()
 			{
 				int level = nextLevel;
 
@@ -261,13 +260,19 @@ public class EwThreading
 					{
 						Thread.currentThread().setName(Integer.toString(level));
 						r.run();
+						
+					}
+					catch (RuntimeException e)
+					{
+						ex = e;
 					}
 					catch (Exception e)
 					{
 						e.printStackTrace();
 					}
 				}
-			});
+			};
+			Future<?> submit = tps.submit(run,run);
 			run.f = submit;
 			r.f = submit;
 			return submit;
@@ -328,6 +333,31 @@ public class EwThreading
 						go_on = false;
 						i++;
 					}
+					else
+					{
+						MyRunnable ex;
+						try
+						{
+							ex = ((MyRunnable)f.get());
+							if (ex != null)
+								if (ex.ex != null)
+									if (ex.ex instanceof RuntimeException)
+									{
+										ex.ex.printStackTrace();
+										throw ((RuntimeException)ex.ex);
+									}
+						}
+						catch (InterruptedException e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						catch (ExecutionException e)
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 				if (go_on)
 					break;
 				Date d = new Date();
@@ -370,6 +400,7 @@ public class EwThreading
 		protected int i;
 		public Object o;
 		public Future f;
+		public Throwable ex;
 		public boolean cancel = false;
 
 		public Object clone() throws CloneNotSupportedException
