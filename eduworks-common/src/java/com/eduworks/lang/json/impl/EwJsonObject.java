@@ -1034,10 +1034,15 @@ public class EwJsonObject extends JSONObject implements EwJsonCollection
 		return key;
 	}
 
+	boolean sortedKeys = false;
+	
 	@Override
 	public Iterator keys()
 	{
-		return ((Collection) orderedKeys.clone()).iterator();
+		EwList<String> collection = new EwList<String>(orderedKeys);
+		if (sortedKeys)
+			collection.sort(collection);
+		return collection.iterator();
 	}
 
 	@Override
@@ -1057,4 +1062,12 @@ public class EwJsonObject extends JSONObject implements EwJsonCollection
 		return r;
 	}
 
+	public String toString(){
+		sortedKeys = true;
+		String result = super.toString();
+		sortedKeys = false;
+		return result;
+		
+	}
+	
 }
