@@ -12,12 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EwCache<K, V>
 {
 	public static boolean cache = true;
-	public static EwCache<String, SoftReference<EwCache<Object, Object>>>	caches	= new EwCache<String, SoftReference<EwCache<Object, Object>>>(20);
+	public static EwCache<String, SoftReference<EwCache<Object, Object>>> caches = new EwCache<String, SoftReference<EwCache<Object, Object>>>(20);
+
 	public static synchronized EwCache<Object, Object> getCache(String name)
 	{
-		return getCache(name,2000);
+		return getCache(name, 2000);
 	}
-	public static synchronized EwCache<Object, Object> getCache(String name,int count)
+
+	public static synchronized EwCache<Object, Object> getCache(String name, int count)
 	{
 		if (!cache)
 			return null;
@@ -31,10 +33,10 @@ public class EwCache<K, V>
 		return cacheActual;
 	}
 
-	private static final float	hashTableLoadFactor	= 0.75f;
+	private static final float hashTableLoadFactor = 0.75f;
 
-	private ConcurrentHashMap<K, V>	map;
-	private int					cacheSize;
+	private ConcurrentHashMap<K, V> map;
+	private int cacheSize;
 
 	public EwCache(int cacheSize)
 	{
@@ -42,21 +44,22 @@ public class EwCache<K, V>
 		int hashTableCapacity = (int) Math.ceil(cacheSize / hashTableLoadFactor) + 1;
 		map = new ConcurrentHashMap<K, V>(hashTableCapacity, hashTableLoadFactor)
 		{
-			private static final long	serialVersionUID	= 1;
+			private static final long serialVersionUID = 1;
 
 		};
 	}
 
 	public synchronized V get(K key)
 	{
-		if (key == null) return null;
+		if (key == null)
+			return null;
 		return map.get(key);
 	}
 
 	public synchronized void put(K key, V value)
 	{
 		if (cache)
-		map.put(key, value);
+			map.put(key, value);
 	}
 
 	public synchronized void clear()
@@ -83,10 +86,12 @@ public class EwCache<K, V>
 	{
 		caches.clear();
 	}
-	public Set<Entry<K,V>> entrySet()
+
+	public Set<Entry<K, V>> entrySet()
 	{
 		return map.entrySet();
 	}
+
 	public int size()
 	{
 		return map.size();
