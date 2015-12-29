@@ -48,4 +48,9 @@ public class InMemoryFile
 			return null;
 		}
 	}
+	@Override
+	public String toString()
+	{
+		return name;
+	}
 }
