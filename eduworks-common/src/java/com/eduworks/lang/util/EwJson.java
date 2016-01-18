@@ -1330,4 +1330,52 @@ public class EwJson
         return JSONObject.quote(value.toString());
     }
 
+    /***
+     * Deep copies all JSON elements, shallow copies anything else.
+     * @param cl
+     * @return
+     * @throws JSONException
+     */
+	public static JSONObject clone(JSONObject cl) throws JSONException
+	{
+		JSONObject jo = new JSONObject();
+		Iterator<String> it = cl.keys();
+		while (it.hasNext())
+		{
+			String next = it.next();
+			Object o = cl.get(next);
+			if (o == null) continue;
+			if (o instanceof JSONObject)
+				jo.put(next,clone((JSONObject) o));
+			else if (o instanceof JSONArray)
+				jo.put(next,clone((JSONArray) o));
+			else
+				jo.put(next,o);
+		}
+		return jo;
+	}
+
+    /***
+     * Deep copies all JSON elements, shallow copies anything else.
+     * @param ar
+     * @return
+     * @throws JSONException
+     */
+	private static JSONArray clone(JSONArray ar) throws JSONException
+	{
+		JSONArray result = new JSONArray();
+		for (int i = 0;i < ar.length();i++)
+		{
+			Object o = ar.get(i);
+			if (o == null) continue;
+			if (o instanceof JSONObject)
+				result.put(clone((JSONObject) o));
+			else if (o instanceof JSONArray)
+				result.put(clone((JSONArray) o));
+			else
+				result.put(o);
+		}
+		return result;
+	}
+
 }

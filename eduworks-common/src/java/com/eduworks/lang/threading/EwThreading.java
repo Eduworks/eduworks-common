@@ -6,6 +6,8 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -219,8 +221,8 @@ public class EwThreading
 	public static void forkAccm(MyFutureList placeToAdd, boolean forkSlowly, MyRunnable r, int forkLimit)
 	{
 		placeToAdd.add(fork(forkSlowly, r, forkLimit));
-		if (forkSlowly && placeToAdd.list.size() % 10000 == 0)
-			log.info("So far " + placeToAdd.list.size());
+		if (forkSlowly && placeToAdd.size() % 10000 == 0)
+			log.info("So far " + placeToAdd.size());
 	}
 
 	public static void fork(int min, int lessthan, MyRunnable r)
@@ -247,7 +249,7 @@ public class EwThreading
 		{
 			if (forkSlowly || forkLimit != Integer.MAX_VALUE)
 				while (getTaskCount(getThreadLevel()) > threads || getTaskCount(getThreadLevel()) >= forkLimit)
-					EwThreading.sleep(10);
+					EwThreading.sleep(0);
 			final int nextLevel = getThreadLevel() + 1;
 			MyRunnable run = new MyRunnable()
 			{
@@ -260,7 +262,6 @@ public class EwThreading
 					{
 						Thread.currentThread().setName(Integer.toString(level));
 						r.run();
-						
 					}
 					catch (RuntimeException e)
 					{
@@ -285,24 +286,22 @@ public class EwThreading
 		}
 	}
 
-	public static class MyFutureList
+	public static class MyFutureList extends ConcurrentLinkedQueue<Future<?>>
 	{
 		private static final long serialVersionUID = -8460295382838816873L;
 		long ms = System.currentTimeMillis();
 		long zero = System.currentTimeMillis();
 		long count = 0;
 
-		List<Future<?>> list = Collections.synchronizedList(new EwList<Future<?>>());
-
 		public void nowPause()
 		{
 			nowPause(false);
 		}
 
-		public void add(Future<?> fork)
+		public boolean add(Future<?> fork)
 		{
-			list.add(fork);
 			count++;
+			return super.add(fork);
 		}
 
 		public void nowPause(boolean report)
@@ -327,7 +326,10 @@ public class EwThreading
 				}
 				boolean go_on = true;
 				int i = 0;
-				for (Future f : list)
+				Iterator<Future<?>> it = iterator();
+				while (it.hasNext())
+				{
+					Future f = it.next();
 					if (f.isDone() == false)
 					{
 						go_on = false;
@@ -349,15 +351,15 @@ public class EwThreading
 						}
 						catch (InterruptedException e)
 						{
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						catch (ExecutionException e)
 						{
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						it.remove();
 					}
+				}
 				if (go_on)
 					break;
 				Date d = new Date();
@@ -368,11 +370,6 @@ public class EwThreading
 					long future = (long) ((((((double) count) / ((double) (count - i))) - 1.0) * (current - zero)) + current);
 					String stuff = "Started: " + new Date(zero).toString() + " Estd Done: " + new Date(future).toString();
 					log.info("So far " + (count - i) + "/" + count + "(" + ((double) (count - i)) / ((double) count) + ") " + stuff);
-					// long duration = System.currentTimeMillis() - ms;
-					// double perSecond = (double) (list.size() - i) / ((double)
-					// duration / 1000.0);
-					// log.debug("Waiting on " + i + " tasks to complete. " +
-					// perSecond + " per second.");
 					reportNext = new Date();
 				}
 				try
@@ -388,7 +385,7 @@ public class EwThreading
 
 		public void nowKill()
 		{
-			for (Future<?> f : list)
+			for (Future<?> f : this)
 			{
 				f.cancel(true);
 			}
