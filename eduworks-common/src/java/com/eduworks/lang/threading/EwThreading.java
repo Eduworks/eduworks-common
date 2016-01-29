@@ -34,12 +34,14 @@ public class EwThreading
 
 	public static void setThreadCount(int threadBoost)
 	{
+		synchronized(tpses)
+		{
 		for (ThreadPoolExecutor tps : tpses)
 		{
 			tps.setCorePoolSize(threadBoost);
 			tps.setMaximumPoolSize(threadBoost);
 		}
-
+		}
 	}
 
 	public static long getTaskCount()
