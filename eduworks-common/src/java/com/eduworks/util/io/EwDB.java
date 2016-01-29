@@ -50,12 +50,12 @@ public class EwDB
 		new File(_baseDirectory).mkdir();
 		File dbLocation = new File(_baseDirectory, _databaseName);
 		try {
-			lsh.db = DBMaker.newFileDB(dbLocation).mmapFileEnablePartial().cacheDisable().closeOnJvmShutdown().make();
+			lsh.db = DBMaker.newFileDB(dbLocation).cacheDisable().closeOnJvmShutdown().make();
 		} catch (IOError e) {
 			System.out.println(e.getMessage());
 			if (e.getMessage().equalsIgnoreCase("java.io.IOException: storage has invalid header") || e.getMessage().equalsIgnoreCase("java.io.IOException: New store format version, please use newer MapDB version")) {
 				upgradeDatabase(dbLocation, false);
-				lsh.db = DBMaker.newFileDB(dbLocation).mmapFileEnablePartial().cacheDisable().closeOnJvmShutdown().make();
+				lsh.db = DBMaker.newFileDB(dbLocation).cacheDisable().closeOnJvmShutdown().make();
 			}
 		}
 		cache.put(cacheKey, lsh);
