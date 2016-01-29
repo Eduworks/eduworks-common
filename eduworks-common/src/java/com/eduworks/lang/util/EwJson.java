@@ -1366,6 +1366,8 @@ public class EwJson
 		JSONArray result = new JSONArray();
 		for (int i = 0;i < ar.length();i++)
 		{
+			if (ar.isNull(i))
+				continue;
 			Object o = ar.get(i);
 			if (o == null) continue;
 			if (o instanceof JSONObject)
