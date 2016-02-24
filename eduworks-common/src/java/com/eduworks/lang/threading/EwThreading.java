@@ -371,6 +371,7 @@ public class EwThreading
 					long current = System.currentTimeMillis();
 					long future = (long) ((((((double) count) / ((double) (count - i))) - 1.0) * (current - zero)) + current);
 					String stuff = "Started: " + new Date(zero).toString() + " Estd Done: " + new Date(future).toString();
+					if ((count - i) != 0)
 					log.info("So far " + (count - i) + "/" + count + "(" + ((double) (count - i)) / ((double) count) + ") " + stuff);
 					reportNext = new Date();
 				}
