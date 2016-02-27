@@ -251,7 +251,7 @@ public class EwThreading
 		{
 			if (forkSlowly || forkLimit != Integer.MAX_VALUE)
 				while (getTaskCount(getThreadLevel()) > threads || getTaskCount(getThreadLevel()) > forkLimit)
-					EwThreading.sleep(0);
+					EwThreading.sleep(1);
 			final int nextLevel = getThreadLevel() + 1;
 			MyRunnable run = new MyRunnable()
 			{
