@@ -16,7 +16,6 @@ public class InMemoryFile
 
 	public InMemoryFile()
 	{
-		// TODO Auto-generated constructor stub
 	}
 
 	public InMemoryFile(File source) throws IOException

@@ -250,8 +250,8 @@ public class EwThreading
 		try
 		{
 			if (forkSlowly || forkLimit != Integer.MAX_VALUE)
-				while (getTaskCount(getThreadLevel()) > threads || getTaskCount(getThreadLevel()) >= forkLimit)
-					EwThreading.sleep(0);
+				while (getTaskCount(getThreadLevel()) > threads || getTaskCount(getThreadLevel()) > forkLimit)
+					EwThreading.sleep(5);
 			final int nextLevel = getThreadLevel() + 1;
 			MyRunnable run = new MyRunnable()
 			{
@@ -372,7 +372,7 @@ public class EwThreading
 					long future = (long) ((((((double) count) / ((double) (count - i))) - 1.0) * (current - zero)) + current);
 					String stuff = "Started: " + new Date(zero).toString() + " Estd Done: " + new Date(future).toString();
 					if ((count - i) != 0)
-					log.info("So far " + (count - i) + "/" + count + "(" + ((double) (count - i)) / ((double) count) + ") " + stuff);
+						log.info("So far " + (count - i) + "/" + count + "(" + ((double) (count - i)) / ((double) count) + ") " + stuff);
 					reportNext = new Date();
 				}
 				try
